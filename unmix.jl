@@ -1,25 +1,36 @@
+#  Copyright 2022 California Institute of Technology
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+# Author: Philip G. Brodrick, philip.g.brodrick@jpl.nasa.gov
+
+
 using ArchGDAL
-using GDAL
 using ArgParse2
-using EllipsisNotation
 using DelimitedFiles
 using Logging
-using Statistics
 using Distributed
 using Printf
-using LinearAlgebra
-using Combinatorics
-using Random
 
-include("src/endmember_library.jl")
-include("src/datasets.jl")
-include("src/unmix_core.jl")
+include("src/EndmemberLibrary.jl")
+include("src/Datasets.jl")
+include("src/UnmixCore.jl")
 
 
 function main()
 
     parser = ArgumentParser(prog = "Spectral Unmixer",
-                            description = "Unmix spectral in one of many ways")
+                            description = "Unmix spectra in one of many ways")
 
     add_argument!(parser, "reflectance_file", type = String, help = "Input reflectance file")
     add_argument!(parser, "endmember_file", type = String, help = "Endmember reflectance deck")

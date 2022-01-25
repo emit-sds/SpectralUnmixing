@@ -1,7 +1,7 @@
 
 using Test
     
-include("../src/endmember_library.jl")
+include("EndmemberLibrary.jl")
 
 datafile = "data/basic_endmember_library.csv"
 classname = "Class"

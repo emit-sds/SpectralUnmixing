@@ -1,4 +1,18 @@
-
+#  Copyright 2022 California Institute of Technology
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+# Author: Philip G. Brodrick, philip.g.brodrick@jpl.nasa.gov
 
 
 @everywhere begin
@@ -13,9 +27,9 @@
     using LinearAlgebra
     using Combinatorics
     using Random
-    include("solvers.jl")
-    include("endmember_library.jl")
-    include("datasets.jl")
+    include("Solvers.jl")
+    include("EndmemberLibrary.jl")
+    include("Datasets.jl")
 
     function wl_index(wavelengths::Array{Float64}, target)
         argmin(abs.(wavelengths .- target))
