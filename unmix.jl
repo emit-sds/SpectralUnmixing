@@ -22,10 +22,7 @@ using Logging
 using Distributed
 using Printf
 
-include("src/EndmemberLibrary.jl")
-include("src/Datasets.jl")
-include("src/UnmixCore.jl")
-
+using SpectralUnmixing
 
 function main()
 
