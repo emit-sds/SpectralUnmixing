@@ -7,16 +7,10 @@ A general, fast, flexible, and including spectral unmixing package.  Oriented to
 This package has not been registered yet, but will be soon.  In the interim, it can be installed directly from this repo. From the Julia REPL or in a Jupyter cell, run
 
 ```
+git clone https://github.com/emit-sds/SpectralUnmixing.git 
 ]activate .  # Optionally activate a project
-]add https://github.com/emit-sds/SpectralUnmixing
+]Pkg.instantiate()
 ```
-
-Or, equivalently, from the command line with
-```
-julia --project=. -e 'import Pkg; Pkg.add("https://github.com/emit-sds/SpectralUnmixing")'
-```
-(Remove --project=. if not working in a project.)
-
 
 ## Using the script
 Basic:
