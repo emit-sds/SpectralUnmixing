@@ -22,7 +22,7 @@ using Logging
 using Distributed
 using Printf
 
-using SpectralUnmixing
+@everywhere using SpectralUnmixing
 
 function main()
 
@@ -119,7 +119,9 @@ function main()
     end
 
     output_band_names = copy(endmember_library.class_valid_keys)
+    println(output_band_names)
     push!(output_band_names, "Brightness")
+    println(output_band_names)
 
     initiate_output_datasets(output_files, x_len, y_len, output_bands, reflectance_dataset)
     set_band_names(output_files[1], output_band_names)

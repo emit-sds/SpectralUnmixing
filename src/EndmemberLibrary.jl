@@ -101,7 +101,7 @@ function load_data!(library::SpectralLibrary)
     end
 
     try
-        library.classes = convert(Array, df[!,library.class_header_name])
+        library.classes = convert(Array{AbstractString}, df[!,library.class_header_name])
     catch e
         throw(ArgumentError("Could not read classes from endmember library.  Try adjusting class_header_name, or reworking the library."))
     end
