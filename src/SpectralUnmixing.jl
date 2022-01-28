@@ -33,7 +33,7 @@ include("Solvers.jl")
 export SpectralLibrary, load_data!, filter_by_class!, read_envi_wavelengths, interpolate_library_to_new_wavelengths!, remove_wavelength_region_inplace!
 export plot_mean_endmembers, plot_endmembers, plot_endmembers_individually
 export initiate_output_datasets, set_band_names, write_results
-export unmix_line
+export unmix_line, unmix_pixel
 
 function wl_index(wavelengths::Array{Float64}, target)
     argmin(abs.(wavelengths .- target))
@@ -62,86 +62,7 @@ function scale_data(refl::Array{Float64}, wavelengths::Array{Float64}, criteria:
     return refl ./ norm
 end
 
-function unmix_line(line::Int64, reflectance_file::String, mode::String, refl_nodata::Float64,
-                    refl_scale::Float64, normalization::String, library::SpectralLibrary,
-                    reflectance_uncertainty_file::String = "", n_mc::Int64 = 1,
-                    combination_type::String = "all", num_endmembers::Vector{Int64} = [2,3],
-                    max_combinations::Int64 = -1, optimization="bvls")
-
-    Random.seed!(13)
-    println(line)
-    img_dat, unc_dat, good_data = load_line(reflectance_file, reflectance_uncertainty_file, line, library.good_bands, refl_nodata)
-    mixture_results = fill(-9999.0, sum(good_data), size(library.class_valid_keys)[1] + 1)
-    if n_mc > 1
-        mixture_results_std = fill(-9999.0, sum(good_data), size(library.class_valid_keys)[1] + 1)
-    else
-        mixture_results_std = nothing
-    end
-
-    if isnothing(img_dat)
-        return line, nothing, good_data, nothing, nothing
-    end
-    scale_data(img_dat, library.wavelengths[library.good_bands], normalization)
-    img_dat = img_dat ./ refl_scale
-
-    if combination_type == "class-even"
-        class_idx = []
-        for uc in library.class_valid_keys
-            push!(class_idx, (1:size(library.classes)[1])[library.classes .== uc])
-        end
-    end
-
-    # Prepare combinations if relevant
-    if mode == "mesma"
-        if combination_type == "class-even"
-            options = collect(Iterators.product(class_idx...))[:]
-        elseif combination_type == "all"
-            options = []
-            for num in num_endmembers
-                combo = [c for c in combinations(1:length(library.classes), num)]
-                push!(options,combo...)
-            end
-        else
-            error("Invalid combiation string")
-        end
-    end
-
-
-    # Solve complete fraction set (based on full library deck)
-    complete_fractions = zeros(size(img_dat)[1], size(library.spectra)[1] + 1)
-    complete_fractions_std = zeros(size(img_dat)[1], size(library.spectra)[1] + 1)
-    for _i in 1:size(img_dat)[1] # Pixel loop
-
-        mc_comp_frac = unmix_pixel(library, img_dat[_i:_i,:], unc_dat[_i:_i,:], class_idx, options,
-                            n_mc, num_endmembers, normalization, optimization, max_combinations, combination_type)
-
-        complete_fractions[_i,:] = mean(mc_comp_frac,dims=1)
-        complete_fractions_std[_i,:] = std(mc_comp_frac,dims=1)
-
-        # Aggregate results from per-library to per-unique-class
-        for (_class, cl) in enumerate(library.class_valid_keys)
-            mixture_results[_i, _class] = sum(complete_fractions[_i,1:end-1][cl .== library.classes])
-        end
-        mixture_results[_i, end] = complete_fractions[_i,end]
-
-        #Aggregate uncertainty if relevant
-        if n_mc > 1
-            for (_class, cl) in enumerate(library.class_valid_keys)
-                mixture_results_std[_i, _class] = std(sum(mc_comp_frac[:,1:end-1][:,cl .== library.classes], dims=2))
-            end
-            mixture_results_std[_i, end] = std(mc_comp_frac[:,end])
-        end
-
-    end
-
-    return line, mixture_results, good_data, mixture_results_std, complete_fractions
-
-
-end
-
-
-
-function unmix_pixel(library, img_dat, unc_dat, class_idx, options, n_mc, num_endmembers, normalization, optimization, max_combinations, combination_type)
+function unmix_pixel(library::SpectralLibrary, img_dat, unc_dat, class_idx, options, mode::String, n_mc::Int64, num_endmembers::Vector{Int64}, normalization::String, optimization::String, max_combinations::Int64, combination_type::String)
 
     mc_comp_frac = zeros(n_mc, size(library.spectra)[1]+1)
     for mc in 1:n_mc #monte carlo loop
@@ -246,5 +167,85 @@ function unmix_pixel(library, img_dat, unc_dat, class_idx, options, n_mc, num_en
     return mc_comp_frac
 
 end
+
+function unmix_line(line::Int64, reflectance_file::String, mode::String, refl_nodata::Float64,
+                    refl_scale::Float64, normalization::String, library::SpectralLibrary,
+                    reflectance_uncertainty_file::String = "", n_mc::Int64 = 1,
+                    combination_type::String = "all", num_endmembers::Vector{Int64} = [2,3],
+                    max_combinations::Int64 = -1, optimization="bvls")
+
+    Random.seed!(13)
+    println(line)
+    img_dat, unc_dat, good_data = load_line(reflectance_file, reflectance_uncertainty_file, line, library.good_bands, refl_nodata)
+    mixture_results = fill(-9999.0, sum(good_data), size(library.class_valid_keys)[1] + 1)
+    if n_mc > 1
+        mixture_results_std = fill(-9999.0, sum(good_data), size(library.class_valid_keys)[1] + 1)
+    else
+        mixture_results_std = nothing
+    end
+
+    if isnothing(img_dat)
+        return line, nothing, good_data, nothing, nothing
+    end
+    scale_data(img_dat, library.wavelengths[library.good_bands], normalization)
+    img_dat = img_dat ./ refl_scale
+
+    if combination_type == "class-even"
+        class_idx = []
+        for uc in library.class_valid_keys
+            push!(class_idx, (1:size(library.classes)[1])[library.classes .== uc])
+        end
+    end
+
+    # Prepare combinations if relevant
+    options = []
+    if mode == "mesma"
+        if combination_type == "class-even"
+            options = collect(Iterators.product(class_idx...))[:]
+        elseif combination_type == "all"
+            for num in num_endmembers
+                combo = [c for c in combinations(1:length(library.classes), num)]
+                push!(options,combo...)
+            end
+        else
+            error("Invalid combiation string")
+        end
+    end
+
+
+    # Solve complete fraction set (based on full library deck)
+    complete_fractions = zeros(size(img_dat)[1], size(library.spectra)[1] + 1)
+    complete_fractions_std = zeros(size(img_dat)[1], size(library.spectra)[1] + 1)
+    for _i in 1:size(img_dat)[1] # Pixel loop
+
+        lid = img_dat[_i:_i,:]
+        if isnothing(unc_dat) lud = nothing else lud = unc_dat[_i:_i,:] end
+        mc_comp_frac = unmix_pixel(library, lid, lud, class_idx, options, mode,
+                            n_mc, num_endmembers, normalization, optimization, max_combinations, combination_type)
+
+        complete_fractions[_i,:] = mean(mc_comp_frac,dims=1)
+        complete_fractions_std[_i,:] = std(mc_comp_frac,dims=1)
+
+        # Aggregate results from per-library to per-unique-class
+        for (_class, cl) in enumerate(library.class_valid_keys)
+            mixture_results[_i, _class] = sum(complete_fractions[_i,1:end-1][cl .== library.classes])
+        end
+        mixture_results[_i, end] = complete_fractions[_i,end]
+
+        #Aggregate uncertainty if relevant
+        if n_mc > 1
+            for (_class, cl) in enumerate(library.class_valid_keys)
+                mixture_results_std[_i, _class] = std(sum(mc_comp_frac[:,1:end-1][:,cl .== library.classes], dims=2))
+            end
+            mixture_results_std[_i, end] = std(mc_comp_frac[:,end])
+        end
+
+    end
+
+    return line, mixture_results, good_data, mixture_results_std, complete_fractions
+
+
+end
+
 
 end
