@@ -4,12 +4,15 @@ SpectralUnmixing
 A general, fast, flexible, and including spectral unmixing package.  Oriented towards VSWIR imaging spectroscopy data but applicable for different sensor types.  Includes options for different treatments of endmember library assemblages, including MESMA and bootstrapping (aka monte carlo) strategies.
 
 ## Installation
-This package has not been registered yet, but will be soon.  In the interim, it can be installed directly from this repo. From the Julia REPL or in a Jupyter cell, run
+This package has not been registered yet, but will be soon.  In the interim, after cloning and navigating into the repository, it can be installed from the Julia REPL, by running
 
 ```
-git clone https://github.com/emit-sds/SpectralUnmixing.git 
-]activate .  # Optionally activate a project
-]Pkg.instantiate()
+julia
+]activate .
+]add https://github.com/kmsquire/ArgParse2.jl
+Pkg.initiate()
+exit()
+export JULIA_PROJECT=${PWD}
 ```
 
 ## Using the script
