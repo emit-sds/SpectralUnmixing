@@ -10,6 +10,7 @@ This package has not been registered yet, but will be soon.  In the interim, aft
 julia
 ]activate .
 ]add https://github.com/kmsquire/ArgParse2.jl
+using Pkg
 Pkg.instantiate()
 exit()
 export JULIA_PROJECT=${PWD}
