@@ -14,7 +14,6 @@
 # In addition to the positional arguments, this script expects a downloaded reflectance granule to be present in a
 # folder called "input".
 
-
 imgspec_dir=$( cd "$(dirname "$0")" ; pwd -P )
 specun_dir=$(dirname ${imgspec_dir})
 
@@ -44,6 +43,9 @@ elif [[ rfl_name == ang* ]]; then
 elif [[ rfl_name == PRS* ]]; then
     output_base=$(echo rfl_name | cut -c1-38)
 fi
+
+echo "Setting up Julia dependencies..."
+julia -e 'using Pkg; Pkg.activate("."); Pkg.add(path="https://github.com/kmsquire/ArgParse2.jl"); Pkg.instantiate()'
 
 cmd="julia $unmix_exe $rfl_path $endmember_library_path $2 $output_base"
 echo "Executing command: $cmd"
