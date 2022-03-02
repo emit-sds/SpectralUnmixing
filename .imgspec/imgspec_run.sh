@@ -24,6 +24,9 @@ mkdir -p output
 # Set up Julia dependencies and project
 echo "Setting up Julia dependencies..."
 cd $specun_dir
+echo "JULIA_DEPOT_PATH before: $JULIA_DEPOT_PATH"
+export JULIA_DEPOT_PATH=/app/.julia
+echo "JULIA_DEPOT_PATH after: $JULIA_DEPOT_PATH"
 julia -e 'using Pkg; Pkg.activate("."); Pkg.add(path="https://github.com/kmsquire/ArgParse2.jl"); Pkg.instantiate()'
 export JULIA_PROJECT=$specun_dir
 cd $cur_dir
