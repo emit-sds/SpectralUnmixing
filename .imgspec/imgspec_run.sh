@@ -14,11 +14,19 @@
 # In addition to the positional arguments, this script expects a downloaded reflectance granule to be present in a
 # folder called "input".
 
+# Define some useful directories
 imgspec_dir=$( cd "$(dirname "$0")" ; pwd -P )
 specun_dir=$(dirname ${imgspec_dir})
-
+cur_dir=$(pwd -P)
 input="input"
 mkdir -p output
+
+# Set up Julia dependencies and project
+echo "Setting up Julia dependencies..."
+cd $specun_dir
+julia -e 'using Pkg; Pkg.activate("."); Pkg.add(path="https://github.com/kmsquire/ArgParse2.jl"); Pkg.instantiate()'
+export JULIA_PROJECT=$specun_dir
+cd $cur_dir
 
 # Spectral Unmixing paths
 unmix_exe="$specun_dir/unmix.jl"
@@ -36,17 +44,17 @@ curl --retry 10 --output $endmember_library_path $1
 # Get output base from reflectance path
 rfl_name=$(basename $rfl_path)
 output_base="output"
-if [[ rfl_name == f* ]]; then
-    output_base=$(echo rfl_name | cut -c1-16)
-elif [[ rfl_name == ang* ]]; then
-    output_base=$(echo rfl_name | cut -c1-18)
-elif [[ rfl_name == PRS* ]]; then
-    output_base=$(echo rfl_name | cut -c1-38)
+if [[ $rfl_name == f* ]]; then
+    output_base=$(echo $rfl_name | cut -c1-16)
+elif [[ $rfl_name == ang* ]]; then
+    output_base=$(echo $rfl_name | cut -c1-18)
+elif [[ $rfl_name == PRS* ]]; then
+    output_base=$(echo $rfl_name | cut -c1-38)
 fi
+output_base_path="output/$output_base"
+echo "Output base path: $output_base_path"
 
-echo "Setting up Julia dependencies..."
-julia -e 'using Pkg; Pkg.activate("."); Pkg.add(path="https://github.com/kmsquire/ArgParse2.jl"); Pkg.instantiate()'
-
-cmd="julia $unmix_exe $rfl_path $endmember_library_path $2 $output_base"
+# Build command and execute
+cmd="julia $unmix_exe $rfl_path $endmember_library_path $2 $output_base_path"
 echo "Executing command: $cmd"
 $cmd
