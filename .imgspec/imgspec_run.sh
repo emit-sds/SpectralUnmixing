@@ -23,6 +23,7 @@ mkdir -p output
 
 # Set up Julia dependencies and project
 echo "Setting up Julia dependencies..."
+echo `id`
 conda install -c conda-forge julia=1.7
 cd $specun_dir
 julia -e 'using Pkg; Pkg.activate("."); Pkg.add(path="https://github.com/kmsquire/ArgParse2.jl"); Pkg.instantiate()'
