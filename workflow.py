@@ -6,6 +6,7 @@ import clean_spectra
 import build_libraries
 import download_data
 from figures import figures
+from run_unmix import unmmix
 
 
 def dwnld(base_directory: str, configs: str, wavelengths: str):
@@ -23,7 +24,13 @@ def run_cs(base_directory:str, configs:str, wavelengths:str, geofilter: bool, le
 def build_em(base_directory:str, configs:str, wavelengths:str, cols:int, level:str, combinations:int):
     bl = build_libraries.endmembers(base_directory=base_directory, configs=configs, instrument=wavelengths)
     bl.percentage_base()
-    #bl.reflectance_bootstrap(cols=cols, level=level, combinations=combinations)
+    bl.reflectance_bootstrap(cols=cols, level=level, combinations=combinations)
+
+
+# setting the dry-run to False will execute the subprocess call
+def spectral_unmix(base_directory:str):
+    su = unmmix(base_directory=base_directory)
+    su.debug(dry_run=True)
 
 
 def create_figures(base_directory: str, wavelengths:str):
@@ -56,6 +63,9 @@ def main():
     if args.mode in ['build', 'all']:
         build_em(base_directory=args.bd, configs=args.configs, wavelengths=args.wvls,
                  cols=args.cols, level=args.level, combinations=args.comb)
+
+    if args.mode in ['unmix', 'all']:
+        spectral_unmix(base_directory=args.bd)
 
     if args.mode in ['figs', 'all']:
         create_figures(base_directory=args.bd, wavelengths=args.wvls)
