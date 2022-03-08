@@ -37,7 +37,8 @@ class unmmix:
     def debug(self, dry_run=True):
         execute_call(['julia', '-p', self.n_cores, 'unmix.jl', self.reflectance_file, self.em_file, self.level_arg,
                       os.path.join(self.base_directory, 'output', 'debug', "debug_test"), "--mode", "sma",
-                      "--num_endmembers", "-1", "--normalization", "brightness"], dry_run)
+                      "--num_endmembers", "-1", "--normalization", "brightness", "--spectral_starting_column", "6"],
+                     dry_run)
 
 
 
@@ -47,8 +48,6 @@ class unmmix:
         # num_mc = ["5", "10", "50", "100", "200"]
         # num_em = ["5", "10", "30"]
         # max_comb = ["10", "100", "500", "1000"]
-        #
-        # dry_run = False
 
 
 
