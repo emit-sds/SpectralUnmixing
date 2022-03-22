@@ -4,11 +4,13 @@ algo_name: SpectralUnmixing
 version: imgspec
 environment: ubuntu
 repository_url: https://github.com/emit-sds/SpectralUnmixing.git
-docker_url: registry.imgspec.org/root/ade_base_images/plant:latest
+docker_url: registry.imgspec.org/root/ade_base_images/vanilla:latest
 
 # fill out these fields
 # explain what this algorithm does
 description: A general, fast, and flexible package for spectral unmixing.
+# path to the build script for installing and building the algorithm in the docker image
+build_command: SpectralUnmixing/.imgspec/install.sh
 # path to the wrapper script for running the algorithm
 run_command: SpectralUnmixing/.imgspec/imgspec_run.sh
 # set a storage value in GB or MB or KB, e.g. "100GB", "20MB", "10KB"

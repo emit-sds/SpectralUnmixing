@@ -17,20 +17,11 @@
 # Define some useful directories
 imgspec_dir=$( cd "$(dirname "$0")" ; pwd -P )
 specun_dir=$(dirname ${imgspec_dir})
-cur_dir=$(pwd -P)
 input="input"
 mkdir -p output
 
-# Set up Julia dependencies and project
-echo "Setting up Julia dependencies..."
-echo `id`
-conda install -c conda-forge julia=1.7
-cd $specun_dir
-julia -e 'using Pkg; Pkg.activate("."); Pkg.add(path="https://github.com/kmsquire/ArgParse2.jl"); Pkg.instantiate()'
+# Export JULIA_PROJECT again in case it doesn't carry over from install.sh
 export JULIA_PROJECT=$specun_dir
-
-# Return to original directory for remainder of script
-cd $cur_dir
 
 # Spectral Unmixing paths
 unmix_exe="$specun_dir/unmix.jl"
