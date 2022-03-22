@@ -10,7 +10,7 @@ specun_dir=$(dirname ${imgspec_dir})
 cur_dir=$(pwd -P)
 
 # Install Julia and then install Julia dependencies
-conda install -c conda-forge julia=1.7
+conda install -y -c conda-forge julia=1.7
 cd $specun_dir
 julia -e 'using Pkg; Pkg.activate("."); Pkg.add(path="https://github.com/kmsquire/ArgParse2.jl"); Pkg.instantiate()'
 export JULIA_PROJECT=$specun_dir
