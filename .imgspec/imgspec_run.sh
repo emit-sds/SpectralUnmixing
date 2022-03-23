@@ -20,6 +20,9 @@ specun_dir=$(dirname ${imgspec_dir})
 input="input"
 mkdir -p output
 
+# Activate conda environment
+source activate spectral-unmixing
+
 # Export JULIA_PROJECT again in case it doesn't carry over from install.sh
 export JULIA_PROJECT=$specun_dir
 

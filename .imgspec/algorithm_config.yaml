@@ -4,7 +4,7 @@ algo_name: SpectralUnmixing
 version: imgspec
 environment: ubuntu
 repository_url: https://github.com/emit-sds/SpectralUnmixing.git
-docker_url: registry.imgspec.org/root/ade_base_images/vanilla:latest
+docker_url: registry.imgspec.org/root/ade_base_images/vanilla:1.0
 
 # fill out these fields
 # explain what this algorithm does
