@@ -7,11 +7,7 @@ A general, fast, flexible, and including spectral unmixing package.  Oriented to
 This package has not been registered yet, but will be soon.  In the interim, after cloning and navigating into the repository, it can be installed from the Julia REPL, by running
 
 ```
-julia
-]activate .
-]add https://github.com/kmsquire/ArgParse2.jl
-Pkg.initiate()
-exit()
+julia -e 'using Pkg; Pkg.activate("."); Pkg.precompile()'
 export JULIA_PROJECT=${PWD}
 ```
 
