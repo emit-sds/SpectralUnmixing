@@ -25,3 +25,17 @@ inputs:
   - name: endmember_column
     type: positional
     default: "class"
+  - name: n_cores
+    type: positional
+    default: "1"
+  - name: refl_nodata
+    type: positional
+    default: "None"
+  - name: refl_scale
+    type: positional
+    default: "None"
+  - name: normalization
+    type: positional
+    default: "None"
+
+

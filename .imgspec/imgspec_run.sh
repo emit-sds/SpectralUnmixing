@@ -10,6 +10,11 @@
 #
 # $1: URL of endmember library
 # $2: Column name from endmember library that describes the library classes (default is "class")
+# $3: Number of cores to use (default is "1")
+# $4: Nodata value expected in input reflectance data (default is "None" - will use the repo's default)
+# $5: Scale image data (divide it by) this amount (default is "None" - will use the repo's default)
+# $6: Flag to indicate the scaling type. Options = [none, brightness, specific wavelength] (default is "None" - will
+#     use the repo's default)
 #
 # In addition to the positional arguments, this script expects a downloaded reflectance granule to be present in a
 # folder called "input".
@@ -53,6 +58,26 @@ output_base_path="output/$output_base"
 echo "Output base path: $output_base_path"
 
 # Build command and execute
-cmd="julia $unmix_exe $rfl_path $endmember_library_path $2 $output_base_path"
+cmd="julia"
+
+# Add number of cores
+if [[ $3 != "1" ]]; then
+    cmd="$cmd -p $3"
+fi
+
+# Add the required args (and assume mode is sma for now)
+cmd="$cmd $unmix_exe $rfl_path $endmember_library_path $2 $output_base_path --mode=sma"
+
+# Add the optional args
+if [[ $4 != "None" ]]; then
+    cmd="$cmd --refl_nodata=$4"
+fi
+if [[ $5 != "None" ]]; then
+    cmd="$cmd --refl_scale=$5"
+fi
+if [[ $6 != "None" ]]; then
+    cmd="$cmd --normalization=$6"
+fi
+
 echo "Executing command: $cmd"
 $cmd
