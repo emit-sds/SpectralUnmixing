@@ -1,8 +1,24 @@
+#  Copyright 2022 California Institute of Technology
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+# Author: Philip G. Brodrick, philip.g.brodrick@jpl.nasa.gov
+
 using JuMP
 using NLopt
 using LinearAlgebra
 
-function opt_solve(A, b, x0, lb, ub)
+function opt_solve(A::Array, b::Array, x0::Array, lb::Array, ub::Array)
 
     #mle = Model(optimizer_with_attributes(Ipopt.Optimizer, "print_level" => 0))
     mle = Model(NLopt.Optimizer)
@@ -25,11 +41,15 @@ function opt_solve(A, b, x0, lb, ub)
 end
 
 
-function dolsq(A, b)
-    x = A \ b
-    #x = pinv(A)*b
-    #Q,R = qr(A)
-    #x = inv(R)*(Q'*b)
+function dolsq(A::Array, b::Array, method="default")
+    if method == "default"
+        x = A \ b
+    elseif method == "pinv"
+        x = pinv(A)*b
+    elseif method == "qr"
+        Q,R = qr(A)
+        x = inv(R)*(Q'*b)
+    end
     return x
 end
 
