@@ -1,5 +1,6 @@
 using JuMP
 using NLopt
+using LinearAlgebra
 
 function opt_solve(A, b, x0, lb, ub)
 
@@ -10,7 +11,7 @@ function opt_solve(A, b, x0, lb, ub)
     x0[x0 .< 0] .= 0
     x0[x0 .> 1] .= 1
 
-    @variable(mle, lb <= x[1:length(x0)] <= ub)
+    @variable(mle, lb[i] <= x[i=1:length(x0)] <= ub[i])
     #@constraint(mle, sum(x) == 1)
     for n in 1:length(x0) set_start_value(x[n], x0[n]) end
 
