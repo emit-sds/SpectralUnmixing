@@ -21,6 +21,7 @@ using Logging
 using Statistics
 using Plots
 using ModularIndices
+using NMF
 
 function nanargmax(input::Array)
     x = copy(input)
@@ -127,6 +128,18 @@ function load_data!(library::SpectralLibrary)
     return library
 end
 
+
+function save_data(library::SpectralLibrary, output_filename::String; class_label_name::String = "Label")
+
+    df = DataFrame()
+    insertcols!(df, 1, class_label_name => library.classes)
+    for (_wv, wv) in enumerate(library.wavelengths)
+        insertcols!(df, 1 + _wv, string(wv) => library.spectra[:,_wv])
+    end
+    CSV.write(output_filename, df)
+
+end
+
 function filter_by_class!(library::SpectralLibrary)
     if isnothing(library.class_valid_keys)
         @info "No class valid keys provided, no filtering occuring"
@@ -178,7 +191,27 @@ function brightness_normalize!(library::SpectralLibrary)
     library.spectra = library.spectra ./ sqrt.(mean(library.spectra[:,library.good_bands].^2, dims=2))
 end
 
-function plot_mean_endmembers(endmember_library::SpectralLibrary, output_name::String)
+function reduce_endmembers_nmf!(library::SpectralLibrary, max_endmembers_per_class::Int64)
+
+    reduced_library = []
+    new_classes = copy(library.classes)[1:max_endmembers_per_class*size(library.class_valid_keys)[1]]
+    for (_c, cla) in enumerate(library.class_valid_keys)
+        library_subset = library.spectra[library.classes .== cla, library.good_bands]
+
+        out_spectra = zeros(max_endmembers_per_class, size(library.spectra)[2])
+        out_spectra[:,:] .= NaN
+
+        r = nnmf(library_subset, max_endmembers_per_class; maxiter=500, tol=1.0e-2)
+        out_spectra[:,library.good_bands] = r.H
+
+        push!(reduced_library,out_spectra)
+        new_classes[(_c-1) * max_endmembers_per_class + 1:_c * max_endmembers_per_class] .= cla
+    end
+    library.spectra = cat(reduced_library...,dims=1)
+    library.classes = new_classes
+end
+
+function plot_mean_endmembers(endmember_library; output_name = "")
     plots = []
     for (_u, u) in enumerate(endmember_library.class_valid_keys)
         mean_spectra = mean(endmember_library.spectra[endmember_library.classes .== u,:],dims=1)[:]
@@ -187,15 +220,18 @@ function plot_mean_endmembers(endmember_library::SpectralLibrary, output_name::S
     xlabel!("Wavelength [nm]")
     ylabel!("Reflectance")
     xticks!([500, 1000, 1500, 2000, 2500, 3000])
-    plot!(dpi=400)
-    savefig(output_name)
+    plot!(dpi=200)
+    if output_name != ""
+        savefig(output_name)
+    end
+    plot!()
 end
 
-function plot_endmembers(endmember_library::SpectralLibrary, output_name::String)
+function plot_endmembers(endmember_library::SpectralLibrary; output_name::String = "")
 
     for (_u, u) in enumerate(endmember_library.class_valid_keys)
         if _u == 1
-            plot(endmember_library.wavelengths, endmember_library.spectra[endmember_library.classes .== u,:]', lab="", xlim=[300,3200], color=palette(:tab10)[Mod(_u)],dpi=400)
+            plot(endmember_library.wavelengths, endmember_library.spectra[endmember_library.classes .== u,:]', lab="", xlim=[300,3200], color=palette(:tab10)[Mod(_u)],dpi=200)
         else
             plot!(endmember_library.wavelengths, endmember_library.spectra[endmember_library.classes .== u,:]', lab="",xlim=[300,3200], color=palette(:tab10)[Mod(_u)])
         end
@@ -206,22 +242,28 @@ function plot_endmembers(endmember_library::SpectralLibrary, output_name::String
     for (_u, u) in enumerate(endmember_library.class_valid_keys)
         plot!([1:2],[0,0.3], color=palette(:tab10)[Mod(_u)], labels=u)
     end
-    savefig(output_name)
+    if output_name != ""
+        savefig(output_name)
+    end
+    plot!()
 end
 
-function plot_endmembers_individually(endmember_library::SpectralLibrary, output_name::String)
+function plot_endmembers_individually(endmember_library::SpectralLibrary; output_name::String = "")
     plots = []
     spectra = endmember_library.spectra
     classes = endmember_library.classes
     for (_u, u) in enumerate(endmember_library.class_valid_keys)
         sp = spectra[classes .== u,:]
         sp[broadcast(isnan,sp)] .= 0
-        brightness = sum(sp, dims=2)
-        toplot = spectra[classes .== u,:] ./ brightness
+        toplot = spectra[classes .== u,:]
         #push!(plots, plot(endmember_library.wavelengths, toplot', title=u, color=palette(:tab10)[_u], xlabel="Wavelength [nm]", ylabel="Reflectance"))
         push!(plots, plot(endmember_library.wavelengths, toplot', title=u, xlabel="Wavelength [nm]", ylabel="Reflectance"))
         xticks!([500, 1000, 1500, 2000, 2500])
     end
-    plot(plots...,size=(1000,600),dpi=400)
-    savefig(output_name)
+    plot(plots...,size=(1000,600),dpi=200)
+    plot!(legend=:outertopright)
+    if output_name != ""
+        savefig(output_name)
+    end
+    plot!()
 end
