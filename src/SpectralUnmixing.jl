@@ -29,11 +29,19 @@ using Random
 include("Datasets.jl")
 include("EndmemberLibrary.jl")
 include("Solvers.jl")
+include("Plotting.jl")
 
-export SpectralLibrary, load_data!, filter_by_class!, read_envi_wavelengths, interpolate_library_to_new_wavelengths!, remove_wavelength_region_inplace!
-export reduce_endmembers_nmf!, reduce_endmembers_kmeans!, reduce_endmembers_pca!
+# Endmember Library Functions
+export SpectralLibrary, load_data!, filter_by_class!, read_envi_wavelengths, interpolate_library_to_new_wavelengths!, remove_wavelength_region_inplace!, scale_library!
+export reduce_endmembers_nmf!, reduce_endmembers_kmeans!, reduce_endmembers_pca!, brightness_normalize!
+
+# Plotting Functions
 export plot_mean_endmembers, plot_endmembers, plot_endmembers_individually
+
+# Dataset functions
 export initiate_output_datasets, set_band_names, write_results
+
+# Unmixing and simulation functions
 export unmix_line, unmix_pixel, simulate_pixel
 
 function wl_index(wavelengths::Vector{Float64}, target)
@@ -50,11 +58,19 @@ function scale_data(refl::Matrix{Float64}, wavelengths::Vector{Float64}, criteri
         for br in bad_regions_wl
             good_bands[wl_index(wavelengths, br[1]):wl_index(wavelengths, br[2])] .= false
         end
-        norm = sqrt.(mean(refl[:,good_bands].^2, dims=2))
+        if length(size(refl)) == 2
+            norm = sqrt.(mean(refl[:,good_bands].^2, dims=2))
+        else
+            norm = sqrt.(mean(refl[good_bands].^2))
+        end
     else
         try
             target_wl = parse(Float64,criteria)
-            norm = refl[:,wl_index(wavelengths, target_wl)] ./ 0.5
+            if length(size(refl)) == 2
+                norm = refl[:,wl_index(wavelengths, target_wl)] ./ 0.5
+            else
+                norm = refl[wl_index(wavelengths, target_wl)] ./ 0.5
+            end
         catch e
             throw(ArgumentError(string("normalization must be [none, brightness, or a specific wavelength].  Provided:", criteria)))
         end
@@ -114,7 +130,13 @@ function results_from_mc(results::Matrix{Float64}, cost::Vector{Float64}, mode::
 
 end
 
-function unmix_pixel(library::SpectralLibrary, img_dat::Matrix{Float64}, unc_dat, class_idx, options, mode::String, n_mc::Int64, num_endmembers::Vector{Int64}, normalization::String, optimization::String, max_combinations::Int64, combination_type::String)
+function unmix_pixel(library::SpectralLibrary, img_dat_input::Array{Float64}, unc_dat, class_idx, options, mode::String, n_mc::Int64, num_endmembers::Vector{Int64}, normalization::String, optimization::String, max_combinations::Int64, combination_type::String)
+
+    if length(size(img_dat_input)) == 1
+        img_dat = reshape(img_dat_input, 1, length(img_dat_input))
+    else
+        img_dat = img_dat_input
+    end
 
     mc_comp_frac = zeros(n_mc, size(library.spectra)[1]+1)
     scores = zeros(n_mc)
@@ -346,7 +368,8 @@ function simulate_pixel(library::SpectralLibrary, max_components::Int64, combina
         output_distribution_classes[_class] = sum(output_distribution[cl .== library.classes])
     end
 
-    return G' * distribution, output_distribution, output_distribution_classes
+    simulated_rfl = G' * distribution
+    return simulated_rfl, output_distribution, output_distribution_classes
 
 end
 
