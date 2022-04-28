@@ -30,22 +30,23 @@ include("Datasets.jl")
 include("EndmemberLibrary.jl")
 include("Solvers.jl")
 
-export SpectralLibrary, load_data!, filter_by_class!, read_envi_wavelengths, interpolate_library_to_new_wavelengths!, remove_wavelength_region_inplace!, reduce_endmembers_nmf!
+export SpectralLibrary, load_data!, filter_by_class!, read_envi_wavelengths, interpolate_library_to_new_wavelengths!, remove_wavelength_region_inplace!
+export reduce_endmembers_nmf!, reduce_endmembers_kmeans!, reduce_endmembers_pca!
 export plot_mean_endmembers, plot_endmembers, plot_endmembers_individually
 export initiate_output_datasets, set_band_names, write_results
 export unmix_line, unmix_pixel, simulate_pixel
 
-function wl_index(wavelengths::Array{Float64}, target)
+function wl_index(wavelengths::Vector{Float64}, target)
     argmin(abs.(wavelengths .- target))
 end
 
-function scale_data(refl::Array{Float64}, wavelengths::Array{Float64}, criteria::String)
+function scale_data(refl::Matrix{Float64}, wavelengths::Vector{Float64}, criteria::String)
 
     if criteria == "none"
         return refl
     elseif criteria == "brightness"
         bad_regions_wl = [[1300,1500],[1800,2000]]
-        good_bands = convert(Array{Bool}, ones(length(wavelengths)))
+        good_bands = convert(Vector{Bool}, ones(length(wavelengths)))
         for br in bad_regions_wl
             good_bands[wl_index(wavelengths, br[1]):wl_index(wavelengths, br[2])] .= false
         end
@@ -113,7 +114,7 @@ function results_from_mc(results::Matrix{Float64}, cost::Vector{Float64}, mode::
 
 end
 
-function unmix_pixel(library::SpectralLibrary, img_dat, unc_dat, class_idx, options, mode::String, n_mc::Int64, num_endmembers::Vector{Int64}, normalization::String, optimization::String, max_combinations::Int64, combination_type::String)
+function unmix_pixel(library::SpectralLibrary, img_dat::Matrix{Float64}, unc_dat, class_idx, options, mode::String, n_mc::Int64, num_endmembers::Vector{Int64}, normalization::String, optimization::String, max_combinations::Int64, combination_type::String)
 
     mc_comp_frac = zeros(n_mc, size(library.spectra)[1]+1)
     scores = zeros(n_mc)

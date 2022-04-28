@@ -18,7 +18,7 @@ using JuMP
 using NLopt
 using LinearAlgebra
 
-function opt_solve(A, b, x0, lb, ub)
+function opt_solve(A::Matrix{Float64}, b::Vector{Float64}, x0::Vector{Float64}, lb::Vector{Float64}, ub::Vector{Float64})
 
     #mle = Model(optimizer_with_attributes(Ipopt.Optimizer, "print_level" => 0))
     mle = Model(NLopt.Optimizer)
@@ -56,7 +56,7 @@ function dolsq(A, b; method::String="default")
 end
 
 
-function bvls(A, b, x_lsq, lb, ub, tol, max_iter, verbose::Int64, inverse_method::String)
+function bvls(A, b, x_lsq, lb, ub, tol::Float64, max_iter::Int64, verbose::Int64, inverse_method::String)
     n_iter = 0
     m, n = size(A)
 
@@ -222,7 +222,7 @@ function bvls(A, b, x_lsq, lb, ub, tol, max_iter, verbose::Int64, inverse_method
     return x, cost
 end
 
-function compute_kkt_optimality(g, on_bound)
+function compute_kkt_optimality(g::Vector{Float64}, on_bound::Vector)
   g_kkt = g .* on_bound
   free_set = on_bound .== 0
   g_kkt[free_set] = broadcast(abs, g[free_set])
