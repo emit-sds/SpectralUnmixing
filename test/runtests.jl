@@ -3,7 +3,7 @@ using Test
     
 using SpectralUnmixing
 
-datafile = "data/basic_endmember_library.csv"
+datafile = "../data/basic_endmember_library.csv"
 classname = "Class"
 
 @info "Basic Loading"
@@ -62,8 +62,9 @@ num_components = 3
 seed = 13
 @time simulated_rfl, true_complete_fractions, true_mixture_fractions = simulate_pixel(lib, num_components, "class-even", seed)
 @test sum(isnothing.(simulated_rfl)) + sum(isnan.(simulated_rfl)) == 0
-@test sum(lib.spectra' * true_complete_fractions .!= simulated_rfl[:]) == 0
-println(size(simulated_rfl))
+println(lib.spectra' * true_complete_fractions)
+println(simulated_rfl[:])
+@test sum(lib.spectra' * true_complete_fractions .≈ simulated_rfl[:]) == length(simulated_rfl[:])
 
 
 for mode in ["sma", "sma-best", "mesma", "mesma-best"]
@@ -90,9 +91,9 @@ for mode in ["sma", "sma-best", "mesma", "mesma-best"]
     @info "Unmix Pixel - Mode: " * mode
     @time mr, mv, cfr, cfv = unmix_pixel(unmixing_library, simulated_rfl, nothing, class_idx, options, mode, n_mc, 
             num_endmembers, normalization, optimization, max_combinations, combination_type)
-    @test sum(mr[1:end-1]) == 1
+    @test sum(mr[1:end-1]) ≈ 1
     @test size(mr) == size(mv)
-    @test sum(cfr[1:end-1]) == 1
+    @test sum(cfr[1:end-1]) ≈ 1
     @test size(cfr) == size(cfv)
 end
 
