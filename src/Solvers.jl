@@ -18,7 +18,7 @@ using JuMP
 using NLopt
 using LinearAlgebra
 
-function opt_solve(A::Array, b::Array, x0::Array, lb::Array, ub::Array)
+function opt_solve(A::Matrix{Float64}, b::Vector{Float64}, x0::Vector{Float64}, lb::Vector{Float64}, ub::Vector{Float64})
 
     #mle = Model(optimizer_with_attributes(Ipopt.Optimizer, "print_level" => 0))
     mle = Model(NLopt.Optimizer)
@@ -41,20 +41,22 @@ function opt_solve(A::Array, b::Array, x0::Array, lb::Array, ub::Array)
 end
 
 
-function dolsq(A::Array, b::Array, method="default")
+function dolsq(A, b; method::String="default")
     if method == "default"
         x = A \ b
     elseif method == "pinv"
         x = pinv(A)*b
     elseif method == "qr"
-        Q,R = qr(A)
-        x = inv(R)*(Q'*b)
+        #Q,R = qr(A)
+        #x = inv(R)*Q'*b
+        qrA = qr(A)
+        x = qrA\b
     end
     return x
 end
 
 
-function bvls(A, b, x_lsq, lb, ub, tol, max_iter, verbose)
+function bvls(A, b, x_lsq, lb, ub, tol::Float64, max_iter::Int64, verbose::Int64, inverse_method::String)
     n_iter = 0
     m, n = size(A)
 
@@ -92,7 +94,7 @@ function bvls(A, b, x_lsq, lb, ub, tol, max_iter, verbose)
 
         A_free = A[:, free_set]
         b_free = b - A * (x .* active_set)
-        z = dolsq(A_free, b_free)
+        z = dolsq(A_free, b_free, method=inverse_method)
 
         lbv = z .< lb[free_set]
         ubv = z .> ub[free_set]
@@ -166,7 +168,7 @@ function bvls(A, b, x_lsq, lb, ub, tol, max_iter, verbose)
 
             A_free = A[:, free_set]
             b_free = b - A * (x .* active_set)
-            z = dolsq(A_free, b_free)
+            z = dolsq(A_free, b_free, method=inverse_method)
 
             lbv = (1:size(free_set)[1])[ z .< lb_free]
             ubv = (1:size(free_set)[1])[ z .> ub_free]
@@ -220,7 +222,7 @@ function bvls(A, b, x_lsq, lb, ub, tol, max_iter, verbose)
     return x, cost
 end
 
-function compute_kkt_optimality(g, on_bound)
+function compute_kkt_optimality(g::Vector{Float64}, on_bound::Vector)
   g_kkt = g .* on_bound
   free_set = on_bound .== 0
   g_kkt[free_set] = broadcast(abs, g[free_set])

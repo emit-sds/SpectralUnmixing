@@ -21,6 +21,9 @@ using Logging
 using Statistics
 using Plots
 using ModularIndices
+using NMF
+using MultivariateStats
+using Clustering
 
 function nanargmax(input::Array)
     x = copy(input)
@@ -80,7 +83,7 @@ mutable struct SpectralLibrary
     class_valid_keys
     scale_factor::Float64
     wavelength_regions_ignore
-    SpectralLibrary(file_name::String, class_header_name::String, spectral_starting_column::Int64, truncate_end_columns::Int64, class_valid_keys = nothing, 
+    SpectralLibrary(file_name::String, class_header_name::String, spectral_starting_column::Int64 = 2, truncate_end_columns::Int64 = 0, class_valid_keys = nothing, 
                     scale_factor = 1.0, wavelength_regions_ignore= [[0,440],[1310,1490],[1770,2050],[2440,2880]]) = 
                     new(file_name, class_header_name, spectral_starting_column, truncate_end_columns, class_valid_keys, scale_factor, wavelength_regions_ignore)
 
@@ -127,6 +130,18 @@ function load_data!(library::SpectralLibrary)
     return library
 end
 
+
+function save_data(library::SpectralLibrary, output_filename::String; class_label_name::String = "Label")
+
+    df = DataFrame()
+    insertcols!(df, 1, class_label_name => library.classes)
+    for (_wv, wv) in enumerate(library.wavelengths)
+        insertcols!(df, 1 + _wv, string(wv) => library.spectra[:,_wv])
+    end
+    CSV.write(output_filename, df)
+
+end
+
 function filter_by_class!(library::SpectralLibrary)
     if isnothing(library.class_valid_keys)
         @info "No class valid keys provided, no filtering occuring"
@@ -149,6 +164,7 @@ function remove_wavelength_region_inplace!(library::SpectralLibrary, set_as_nans
     else
         library.spectra = library.spectra[:, library.good_bands]
         library.wavelengths = library.wavelengths[library.good_bands]
+        library.good_bands = library.good_bands[library.good_bands]
     end
 end
 
@@ -178,50 +194,81 @@ function brightness_normalize!(library::SpectralLibrary)
     library.spectra = library.spectra ./ sqrt.(mean(library.spectra[:,library.good_bands].^2, dims=2))
 end
 
-function plot_mean_endmembers(endmember_library::SpectralLibrary, output_name::String)
-    plots = []
-    for (_u, u) in enumerate(endmember_library.class_valid_keys)
-        mean_spectra = mean(endmember_library.spectra[endmember_library.classes .== u,:],dims=1)[:]
-        plot!(endmember_library.wavelengths, mean_spectra, label=u, xlim=[300,3200])
-    end
-    xlabel!("Wavelength [nm]")
-    ylabel!("Reflectance")
-    xticks!([500, 1000, 1500, 2000, 2500, 3000])
-    plot!(dpi=400)
-    savefig(output_name)
+function split_library(library::SpectralLibrary, split_fraction::Float64)
+    perm = randperm((library.spectra)[1])
+
+    split_1 = perm[1:round(split_fraction * length(perm))]
+    split_2 = perm[round(split_fraction * length(perm)):end]
+
+    output_library_1 = deepcopy(library)
+    output_library_2 = deepcopy(library)
+
+    output_library_1.spectra = output_library_1.spectra[split_1,:]
+    output_library_2.spectra = output_library_2.spectra[split_2,:]
+
+    output_library_1.classes = output_library_1.classes[split_1]
+    output_library_2.classes = output_library_2.classes[split_2]
+
+    return output_library_1, output_library_2
+
 end
 
-function plot_endmembers(endmember_library::SpectralLibrary, output_name::String)
+function reduce_endmembers_nmf!(library::SpectralLibrary, max_endmembers_per_class::Int64)
 
-    for (_u, u) in enumerate(endmember_library.class_valid_keys)
-        if _u == 1
-            plot(endmember_library.wavelengths, endmember_library.spectra[endmember_library.classes .== u,:]', lab="", xlim=[300,3200], color=palette(:tab10)[Mod(_u)],dpi=400)
-        else
-            plot!(endmember_library.wavelengths, endmember_library.spectra[endmember_library.classes .== u,:]', lab="",xlim=[300,3200], color=palette(:tab10)[Mod(_u)])
-        end
+    reduced_library = []
+    new_classes = copy(library.classes)[1:max_endmembers_per_class*size(library.class_valid_keys)[1]]
+    for (_c, cla) in enumerate(library.class_valid_keys)
+        library_subset = library.spectra[library.classes .== cla, library.good_bands]
+
+        out_spectra = zeros(max_endmembers_per_class, size(library.spectra)[2])
+        out_spectra[:,:] .= NaN
+
+        r = nnmf(library_subset, max_endmembers_per_class; maxiter=500, tol=1.0e-2)
+        out_spectra[:,library.good_bands] = r.H
+
+        push!(reduced_library,out_spectra)
+        new_classes[(_c-1) * max_endmembers_per_class + 1:_c * max_endmembers_per_class] .= cla
     end
-    xlabel!("Wavelenth [nm]")
-    ylabel!("Reflectance")
-    xticks!([500, 1000, 1500, 2000, 2500, 3000])
-    for (_u, u) in enumerate(endmember_library.class_valid_keys)
-        plot!([1:2],[0,0.3], color=palette(:tab10)[Mod(_u)], labels=u)
-    end
-    savefig(output_name)
+    library.spectra = cat(reduced_library...,dims=1)
+    library.classes = new_classes
 end
 
-function plot_endmembers_individually(endmember_library::SpectralLibrary, output_name::String)
-    plots = []
-    spectra = endmember_library.spectra
-    classes = endmember_library.classes
-    for (_u, u) in enumerate(endmember_library.class_valid_keys)
-        sp = spectra[classes .== u,:]
-        sp[broadcast(isnan,sp)] .= 0
-        brightness = sum(sp, dims=2)
-        toplot = spectra[classes .== u,:] ./ brightness
-        #push!(plots, plot(endmember_library.wavelengths, toplot', title=u, color=palette(:tab10)[_u], xlabel="Wavelength [nm]", ylabel="Reflectance"))
-        push!(plots, plot(endmember_library.wavelengths, toplot', title=u, xlabel="Wavelength [nm]", ylabel="Reflectance"))
-        xticks!([500, 1000, 1500, 2000, 2500])
+function reduce_endmembers_pca!(library::SpectralLibrary, max_endmembers_per_class::Int64)
+
+    reduced_library = []
+    new_classes = copy(library.classes)[1:max_endmembers_per_class*size(library.class_valid_keys)[1]]
+    for (_c, cla) in enumerate(library.class_valid_keys)
+        library_subset = library.spectra[library.classes .== cla, library.good_bands]
+
+        out_spectra = zeros(max_endmembers_per_class, size(library.spectra)[2])
+        out_spectra[:,:] .= NaN
+
+        model = fit(PCA, library_subset', maxoutdim=max_endmembers_per_class, pratio=1)
+        out_spectra[:,library.good_bands] = projection(model)'
+
+        push!(reduced_library,out_spectra)
+        new_classes[(_c-1) * max_endmembers_per_class + 1:_c * max_endmembers_per_class] .= cla
     end
-    plot(plots...,size=(1000,600),dpi=400)
-    savefig(output_name)
+    library.spectra = cat(reduced_library...,dims=1)
+    library.classes = new_classes
+end
+
+function reduce_endmembers_kmeans!(library::SpectralLibrary, max_endmembers_per_class::Int64)
+
+    reduced_library = []
+    new_classes = copy(library.classes)[1:max_endmembers_per_class*size(library.class_valid_keys)[1]]
+    for (_c, cla) in enumerate(library.class_valid_keys)
+        library_subset = library.spectra[library.classes .== cla, library.good_bands]
+
+        out_spectra = zeros(max_endmembers_per_class, size(library.spectra)[2])
+        out_spectra[:,:] .= NaN
+
+        model = kmeans(library_subset', max_endmembers_per_class, maxiter=1000)
+        out_spectra[:,library.good_bands] = model.centers'
+
+        push!(reduced_library,out_spectra)
+        new_classes[(_c-1) * max_endmembers_per_class + 1:_c * max_endmembers_per_class] .= cla
+    end
+    library.spectra = cat(reduced_library...,dims=1)
+    library.classes = new_classes
 end
