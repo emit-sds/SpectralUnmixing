@@ -83,7 +83,7 @@ mutable struct SpectralLibrary
     class_valid_keys
     scale_factor::Float64
     wavelength_regions_ignore
-    SpectralLibrary(file_name::String, class_header_name::String, spectral_starting_column::Int64, truncate_end_columns::Int64, class_valid_keys = nothing, 
+    SpectralLibrary(file_name::String, class_header_name::String, spectral_starting_column::Int64 = 2, truncate_end_columns::Int64 = 0, class_valid_keys = nothing, 
                     scale_factor = 1.0, wavelength_regions_ignore= [[0,440],[1310,1490],[1770,2050],[2440,2880]]) = 
                     new(file_name, class_header_name, spectral_starting_column, truncate_end_columns, class_valid_keys, scale_factor, wavelength_regions_ignore)
 
@@ -192,6 +192,25 @@ end
 
 function brightness_normalize!(library::SpectralLibrary)
     library.spectra = library.spectra ./ sqrt.(mean(library.spectra[:,library.good_bands].^2, dims=2))
+end
+
+function split_library(library::SpectralLibrary, split_fraction::Float64)
+    perm = randperm((library.spectra)[1])
+
+    split_1 = perm[1:round(split_fraction * length(perm))]
+    split_2 = perm[round(split_fraction * length(perm)):end]
+
+    output_library_1 = deepcopy(library)
+    output_library_2 = deepcopy(library)
+
+    output_library_1.spectra = output_library_1.spectra[split_1,:]
+    output_library_2.spectra = output_library_2.spectra[split_2,:]
+
+    output_library_1.classes = output_library_1.classes[split_1]
+    output_library_2.classes = output_library_2.classes[split_2]
+
+    return output_library_1, output_library_2
+
 end
 
 function reduce_endmembers_nmf!(library::SpectralLibrary, max_endmembers_per_class::Int64)

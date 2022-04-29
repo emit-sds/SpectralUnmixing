@@ -33,7 +33,7 @@ include("Plotting.jl")
 
 # Endmember Library Functions
 export SpectralLibrary, load_data!, filter_by_class!, read_envi_wavelengths, interpolate_library_to_new_wavelengths!, remove_wavelength_region_inplace!, scale_library!
-export reduce_endmembers_nmf!, reduce_endmembers_kmeans!, reduce_endmembers_pca!, brightness_normalize!
+export reduce_endmembers_nmf!, reduce_endmembers_kmeans!, reduce_endmembers_pca!, brightness_normalize!, split_library
 
 # Plotting Functions
 export plot_mean_endmembers, plot_endmembers, plot_endmembers_individually
