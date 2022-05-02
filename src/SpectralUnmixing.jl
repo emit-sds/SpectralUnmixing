@@ -150,7 +150,7 @@ function unmix_pixel(library::SpectralLibrary, img_dat_input::Array{Float64}, un
 
         if occursin("sma", mode)
             perm = get_sma_permutation(class_idx, num_endmembers, combination_type, size(library.spectra)[1])
-            G = library.spectra[perm,:]
+            G = library.spectra[perm, library.good_bands]
 
             G = scale_data(G, library.wavelengths[library.good_bands], normalization)'
 
@@ -190,7 +190,7 @@ function unmix_pixel(library::SpectralLibrary, img_dat_input::Array{Float64}, un
             for (_comb, comb) in enumerate(options[perm])
                 comb = [c for c in comb]
                 #G = hcat(library.spectra[comb,:], ones(size(library.spectra[comb,:])[1],1))
-                G = scale_data(library.spectra[comb,:], library.wavelengths[library.good_bands], normalization)'
+                G = scale_data(library.spectra[comb, library.good_bands], library.wavelengths[library.good_bands], normalization)'
 
                 x0 = dolsq(G, d')
                 ls = nothing

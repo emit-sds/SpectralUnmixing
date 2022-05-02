@@ -112,7 +112,7 @@ function load_line(reflectance_file::String, reflectance_uncertainty_file::Strin
         good_data = .!all(img_dat .== refl_nodata, dims=2)[:,1]
         img_dat = img_dat[good_data,:]
 
-        if sum(good_data) > 1
+        if sum(good_data) >= 1
             if reflectance_uncertainty_file != ""
                 unc_dat = convert(Array{Float64},ArchGDAL.readraster(reflectance_uncertainty_file)[:,line,:])
                 unc_dat = unc_dat[:, good_bands]
