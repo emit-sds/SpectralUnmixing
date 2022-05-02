@@ -1,7 +1,24 @@
+#  Copyright 2022 California Institute of Technology
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+# Author: Philip G. Brodrick, philip.g.brodrick@jpl.nasa.gov
+
 using JuMP
 using NLopt
+using LinearAlgebra
 
-function opt_solve(A, b, x0, lb, ub)
+function opt_solve(A::Matrix{Float64}, b::Vector{Float64}, x0::Vector{Float64}, lb::Vector{Float64}, ub::Vector{Float64})
 
     #mle = Model(optimizer_with_attributes(Ipopt.Optimizer, "print_level" => 0))
     mle = Model(NLopt.Optimizer)
@@ -10,7 +27,7 @@ function opt_solve(A, b, x0, lb, ub)
     x0[x0 .< 0] .= 0
     x0[x0 .> 1] .= 1
 
-    @variable(mle, lb <= x[1:length(x0)] <= ub)
+    @variable(mle, lb[i] <= x[i=1:length(x0)] <= ub[i])
     #@constraint(mle, sum(x) == 1)
     for n in 1:length(x0) set_start_value(x[n], x0[n]) end
 
@@ -24,16 +41,22 @@ function opt_solve(A, b, x0, lb, ub)
 end
 
 
-function dolsq(A, b)
-    x = A \ b
-    #x = pinv(A)*b
-    #Q,R = qr(A)
-    #x = inv(R)*(Q'*b)
+function dolsq(A, b; method::String="default")
+    if method == "default"
+        x = A \ b
+    elseif method == "pinv"
+        x = pinv(A)*b
+    elseif method == "qr"
+        #Q,R = qr(A)
+        #x = inv(R)*Q'*b
+        qrA = qr(A)
+        x = qrA\b
+    end
     return x
 end
 
 
-function bvls(A, b, x_lsq, lb, ub, tol, max_iter, verbose)
+function bvls(A, b, x_lsq, lb, ub, tol::Float64, max_iter::Int64, verbose::Int64, inverse_method::String)
     n_iter = 0
     m, n = size(A)
 
@@ -71,7 +94,7 @@ function bvls(A, b, x_lsq, lb, ub, tol, max_iter, verbose)
 
         A_free = A[:, free_set]
         b_free = b - A * (x .* active_set)
-        z = dolsq(A_free, b_free)
+        z = dolsq(A_free, b_free, method=inverse_method)
 
         lbv = z .< lb[free_set]
         ubv = z .> ub[free_set]
@@ -145,7 +168,7 @@ function bvls(A, b, x_lsq, lb, ub, tol, max_iter, verbose)
 
             A_free = A[:, free_set]
             b_free = b - A * (x .* active_set)
-            z = dolsq(A_free, b_free)
+            z = dolsq(A_free, b_free, method=inverse_method)
 
             lbv = (1:size(free_set)[1])[ z .< lb_free]
             ubv = (1:size(free_set)[1])[ z .> ub_free]
@@ -199,7 +222,7 @@ function bvls(A, b, x_lsq, lb, ub, tol, max_iter, verbose)
     return x, cost
 end
 
-function compute_kkt_optimality(g, on_bound)
+function compute_kkt_optimality(g::Vector{Float64}, on_bound::Vector)
   g_kkt = g .* on_bound
   free_set = on_bound .== 0
   g_kkt[free_set] = broadcast(abs, g[free_set])
