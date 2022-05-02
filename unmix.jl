@@ -102,8 +102,6 @@ function main()
     end
 
 
-    endmember_library.spectra = endmember_library.spectra[:,endmember_library.good_bands]
-
     n_classes = length(unique(endmember_library.classes))
     output_bands = [n_classes + 1]
     output_files = [string(args.output_file_base , "_fractional_cover")]
