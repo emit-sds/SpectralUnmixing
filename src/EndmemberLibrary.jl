@@ -37,7 +37,7 @@ function nanargmin(input::Array)
     return argmin(x);
 end
 
-function read_envi_wavelengths(filename::String)
+function read_envi_wavelengths(filename::String, nm::Bool=true)
     header_name = splitext(filename)[1] * ".hdr"
     header = readlines(header_name)
     found = false
@@ -55,6 +55,12 @@ function read_envi_wavelengths(filename::String)
     end
 
     wavelengths = [parse(Float64, strip(x)) for x in split(split(split(header, "{")[2], "}")[1],",")]
+
+    if nm && all(wavelengths .< 25)
+        wavelengths = wavelengths .* 1000
+        @info "Converting wavelengths read from $filename to nm from microns."
+    end
+        
     return wavelengths
 end
 
@@ -126,6 +132,18 @@ function load_data!(library::SpectralLibrary)
 
     good_bands = get_good_bands_mask(library.wavelengths, library.wavelength_regions_ignore)
     library.good_bands = good_bands
+
+    ignore_regions_nm = false
+    for wri in library.wavelength_regions_ignore
+        if wri[1] > 25 || wri[2] > 25
+            ignore_regions_nm = true
+        end
+    end
+
+    if ignore_regions_nm && all(library.wavelengths .< 25)
+        library.wavelengths = library.wavelengths .* 1000
+        @info "Unit mismatch between library wavelengths and wavelength regions to ignore detected.  Converting library wavelengths to nm from microns"
+    end
 
     return library
 end
