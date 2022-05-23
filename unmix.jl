@@ -95,9 +95,9 @@ function main()
 
 
     if args.mode == "plots"
-        plot_mean_endmembers(endmember_library, string(args.output_file_base, "_mean_endmembers.png"))
-        plot_endmembers(endmember_library, string(args.output_file_base, "_endmembers.png"))
-        plot_endmembers_individually(endmember_library, string(args.output_file_base, "_endmembers_individually.png"))
+        plot_mean_endmembers(endmember_library, output_name=string(args.output_file_base, "_mean_endmembers.png"))
+        plot_endmembers(endmember_library, output_name=string(args.output_file_base, "_endmembers.png"))
+        plot_endmembers_individually(endmember_library, output_name=string(args.output_file_base, "_endmembers_individually.png"))
         exit()
     end
 
