@@ -148,19 +148,20 @@ function unmix_pixel(library::SpectralLibrary, img_dat_input::Array{Float64}, un
             d += (rand(size(d)) .* 2 .- 1) .* unc_dat
         end
 
-        if occursin("sma", mode)
+        if occursin("pinv", optimization)
+            inverse_method = "pinv"
+        elseif occursin("qr", optimization)
+            inverse_method = "qr"
+        else
+            inverse_method = "default"
+        end
+
+        if mode == "sma" || mode == "sma-best"
             perm = get_sma_permutation(class_idx, num_endmembers, combination_type, size(library.spectra)[1])
             G = library.spectra[perm, library.good_bands]
 
             G = scale_data(G, library.wavelengths[library.good_bands], normalization)'
 
-            if occursin("pinv", optimization)
-                inverse_method = "pinv"
-            elseif occursin("qr", optimization)
-                inverse_method = "qr"
-            else
-                inverse_method = "default"
-            end
             x0 = dolsq(G, d', method=inverse_method)
 
             x0 = x0[:]
@@ -177,7 +178,7 @@ function unmix_pixel(library::SpectralLibrary, img_dat_input::Array{Float64}, un
             mc_comp_frac[mc, perm] = res
             scores[mc] = cost
 
-        elseif occursin("mesma", mode)
+        elseif mode == "mesma"
             solutions = []
             costs = zeros(size(options)[1]).+1e12
 
@@ -193,9 +194,10 @@ function unmix_pixel(library::SpectralLibrary, img_dat_input::Array{Float64}, un
                 G = scale_data(library.spectra[comb, library.good_bands], library.wavelengths[library.good_bands], normalization)'
 
                 x0 = dolsq(G, d')
+                x0 = x0[:]
                 ls = nothing
                 if optimization == "bvls"
-                    ls, lc = bvls(G, d[:], x0, zeros(size(x0)), ones(size(x0)), 1e-3, 10, 1)
+                    ls, lc = bvls(G, d[:], x0, zeros(size(x0)), ones(size(x0)), 1e-3, 10, 1, inverse_method)
                     costs[_comb] = lc
                 elseif optimization == "ldsqp"
                     ls, lc = opt_solve(G, d[:], x0, 0, 1)
