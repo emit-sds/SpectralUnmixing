@@ -133,19 +133,12 @@ function main()
         set_band_names(output_files[2], output_band_names)
     end
 
-    results = pmap(line->unmix_line(line,args.reflectance_file, args.mode, args.refl_nodata,
-               args.refl_scale, args.normalization, endmember_library,
+    results = pmap(line->unmix_and_write_line(line,args.reflectance_file, args.mode, args.refl_nodata,
+               args.refl_scale, args.normalization, endmember_library, output_files, args.write_complete_fractions,
                args.reflectance_uncertainty_file, args.n_mc,
-               args.combination_type, args.num_endmembers, args.max_combinations, args.optimizer),
-               args.start_line:end_line)
-
-
-    write_results(output_files, output_bands, x_len, y_len, results, args)
+               args.combination_type, args.num_endmembers, args.max_combinations, args.optimizer), args.start_line:end_line)
 
 end
-
-
-
 
 
 main()
