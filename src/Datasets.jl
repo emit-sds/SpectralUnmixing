@@ -16,7 +16,6 @@
 
 using ArchGDAL
 using GDAL
-using Debugger
 
 
 function set_band_names(filename::String, band_names::Vector)
