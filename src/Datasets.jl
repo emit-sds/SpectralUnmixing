@@ -106,36 +106,36 @@ end
 function write_line_results(output_files::Vector{String}, results, n_mc::Int64, write_complete_fractions::Bool)
     GC.gc()
 
-    output = zeros(size(results[2])[1], 1, size(results[2])[2]) .- 9999
     if isnothing(results[2]) == false
+        output = zeros(size(results[2])[1], 1, size(results[2])[2]) .- 9999
         output[results[3], 1, :] = results[2]
-    end
-    outDataset = ArchGDAL.read(output_files[1], flags=1)
-    ArchGDAL.write!(outDataset, output, [1:size(output)[end];], 0, results[1]-1, size(output)[1], 1)
-    outDataset = nothing
-
-    ods_idx = 2
-    if n_mc > 1
-        output = zeros(size(results[4])[1], 1, size(results[4])[2]) .- 9999
-        if isnothing(results[4]) == false
-            output[results[3], 1, :] = results[4]
-        end
-
-        outDataset = ArchGDAL.read(output_files[ods_idx], flags=1)
+        outDataset = ArchGDAL.read(output_files[1], flags=1)
         ArchGDAL.write!(outDataset, output, [1:size(output)[end];], 0, results[1]-1, size(output)[1], 1)
         outDataset = nothing
+    end
+    ods_idx = 2
+
+    if n_mc > 1
+        if isnothing(results[4]) == false
+            output = zeros(size(results[4])[1], 1, size(results[4])[2]) .- 9999
+            output[results[3], 1, :] = results[4]
+
+            outDataset = ArchGDAL.read(output_files[ods_idx], flags=1)
+            ArchGDAL.write!(outDataset, output, [1:size(output)[end];], 0, results[1]-1, size(output)[1], 1)
+            outDataset = nothing
+        end
         ods_idx += 1
     end
 
     if write_complete_fractions == 1
-        output = zeros(size(results[5])[1], 1, size(results[5])[2]) .- 9999
         if isnothing(results[5]) == false
+            output = zeros(size(results[5])[1], 1, size(results[5])[2]) .- 9999
             output[results[3], 1, :] = results[5]
-        end
 
-        outDataset = ArchGDAL.read(output_files[ods_idx], flags=1)
-        ArchGDAL.write!(outDataset, output, [1:size(output)[end];], 0, results[1]-1, size(output)[1], 1)
-        outDataset = nothing
+            outDataset = ArchGDAL.read(output_files[ods_idx], flags=1)
+            ArchGDAL.write!(outDataset, output, [1:size(output)[end];], 0, results[1]-1, size(output)[1], 1)
+            outDataset = nothing
+        end
         ods_idx += 1
     end
 

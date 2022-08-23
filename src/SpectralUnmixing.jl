@@ -250,6 +250,10 @@ function unmix_line(line::Int64, reflectance_file::String, mode::String, refl_no
     println(line)
 
     img_dat, unc_dat, good_data = load_line(reflectance_file, reflectance_uncertainty_file, line, library.good_bands, refl_nodata)
+    if isnothing(img_dat)
+        return line, nothing, good_data, nothing, nothing
+    end
+
     mixture_results = fill(-9999.0, sum(good_data), size(library.class_valid_keys)[1] + 1)
     complete_fractions = zeros(size(img_dat)[1], size(library.spectra)[1] + 1)
     
@@ -261,9 +265,6 @@ function unmix_line(line::Int64, reflectance_file::String, mode::String, refl_no
         complete_fractions_std = nothing
     end
 
-    if isnothing(img_dat)
-        return line, nothing, good_data, nothing, nothing
-    end
     scale_data(img_dat, library.wavelengths[library.good_bands], normalization)
     img_dat = img_dat ./ refl_scale
 
