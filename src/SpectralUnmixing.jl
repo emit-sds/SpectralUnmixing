@@ -42,7 +42,7 @@ export plot_mean_endmembers, plot_endmembers, plot_endmembers_individually
 export initiate_output_datasets, set_band_names, write_results
 
 # Unmixing and simulation functions
-export unmix_line, unmix_pixel, simulate_pixel
+export unmix_line, unmix_pixel, simulate_pixel, unmix_and_write_line
 
 function wl_index(wavelengths::Vector{Float64}, target)
     argmin(abs.(wavelengths .- target))
@@ -250,6 +250,10 @@ function unmix_line(line::Int64, reflectance_file::String, mode::String, refl_no
     println(line)
 
     img_dat, unc_dat, good_data = load_line(reflectance_file, reflectance_uncertainty_file, line, library.good_bands, refl_nodata)
+    if isnothing(img_dat)
+        return line, nothing, good_data, nothing, nothing
+    end
+
     mixture_results = fill(-9999.0, sum(good_data), size(library.class_valid_keys)[1] + 1)
     complete_fractions = zeros(size(img_dat)[1], size(library.spectra)[1] + 1)
     
@@ -261,9 +265,6 @@ function unmix_line(line::Int64, reflectance_file::String, mode::String, refl_no
         complete_fractions_std = nothing
     end
 
-    if isnothing(img_dat)
-        return line, nothing, good_data, nothing, nothing
-    end
     scale_data(img_dat, library.wavelengths[library.good_bands], normalization)
     img_dat = img_dat ./ refl_scale
 
@@ -315,6 +316,21 @@ function unmix_line(line::Int64, reflectance_file::String, mode::String, refl_no
     end
 
     return line, mixture_results, good_data, mixture_results_std, complete_fractions
+
+end
+
+function unmix_and_write_line(line::Int64, reflectance_file::String, mode::String, refl_nodata::Float64,
+                    refl_scale::Float64, normalization::String, library::SpectralLibrary, output_files::Vector{String},
+                    write_complete_fractions::Bool,
+                    reflectance_uncertainty_file::String = "", n_mc::Int64 = 1,
+                    combination_type::String = "all", num_endmembers::Vector{Int64} = [2,3],
+                    max_combinations::Int64 = -1, optimization="bvls")
+
+    line_results = unmix_line(line, reflectance_file, mode, refl_nodata, refl_scale, normalization, library, 
+        reflectance_uncertainty_file, n_mc, combination_type, num_endmembers,
+        max_combinations, optimization)
+
+    write_line_results(output_files, line_results, n_mc, write_complete_fractions) 
 
 end
 
