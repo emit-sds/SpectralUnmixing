@@ -1,7 +1,7 @@
 name = "SpectralUnmixing"
 uuid = "03261fe2-7bcd-4220-b41a-3c33b0efe8f7"
 authors = ["pgbrodrick <phil.brodrick@gmail.com>"]
-version = "0.2.0"
+version = "0.2.1"
 
 [deps]
 ArchGDAL = "c9ce4bd3-c3d5-55b8-8973-c0e20141b8c3"

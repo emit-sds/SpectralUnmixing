@@ -31,7 +31,7 @@ function main()
 
     add_argument!(parser, "reflectance_file", type = String, help = "Input reflectance file")
     add_argument!(parser, "endmember_file", type = String, help = "Endmember reflectance deck")
-    add_argument!(parser, "endmember_class", type = String, help = "header of column to use in endmember_file")
+    add_argument!(parser, "endmember_class_header", type = String, help = "header of column to use in endmember_file")
     add_argument!(parser, "output_file_base", type = String, help = "Output file base name")
     add_argument!(parser, "--spectral_starting_column", type = Int64, default = 2, help = "Column of library file that spectral information starts on")
     add_argument!(parser, "--truncate_end_columns", type = Int64, default = 0, help = "Columns to remove from spectral library at end of file")
@@ -48,6 +48,7 @@ function main()
     add_argument!(parser, "--optimizer", type=String, default = "bvls", help = "Choice of core optimization.  Options = [inverse, bvls, ldsqp]")
     add_argument!(parser, "--start_line", type=Int64, default = 1, help = "line of image to start on")
     add_argument!(parser, "--end_line", type=Int64, default = -1, help = "line of image to stop on (-1 does the full image)")
+    add_argument!(parser, "--endmember_classes", type=String, default = [""], help = "Class names to use from the endmember library.  By default, all will be used")
     add_argument!(parser, "--log_file", type = String, default = nothing, help = "log file to write to")
     args = parse_args(parser)
 
@@ -58,7 +59,12 @@ function main()
     end
     Logging.global_logger(logger)
 
-    endmember_library = SpectralLibrary(args.endmember_file, args.endmember_class, args.spectral_starting_column, args.truncate_end_columns)
+    valid_keys = nothing
+    if args.endmember_classes[1] != ""
+        valid_keys = args.endmember_classes
+    end
+
+    endmember_library = SpectralLibrary(args.endmember_file, args.endmember_class_header, args.spectral_starting_column, args.truncate_end_columns, valid_keys)
     load_data!(endmember_library)
     filter_by_class!(endmember_library)
 
@@ -127,19 +133,12 @@ function main()
         set_band_names(output_files[2], output_band_names)
     end
 
-    results = pmap(line->unmix_line(line,args.reflectance_file, args.mode, args.refl_nodata,
-               args.refl_scale, args.normalization, endmember_library,
+    results = pmap(line->unmix_and_write_line(line,args.reflectance_file, args.mode, args.refl_nodata,
+               args.refl_scale, args.normalization, endmember_library, output_files, args.write_complete_fractions,
                args.reflectance_uncertainty_file, args.n_mc,
-               args.combination_type, args.num_endmembers, args.max_combinations, args.optimizer),
-               args.start_line:end_line)
-
-
-    write_results(output_files, output_bands, x_len, y_len, results, args)
+               args.combination_type, args.num_endmembers, args.max_combinations, args.optimizer), args.start_line:end_line)
 
 end
-
-
-
 
 
 main()
