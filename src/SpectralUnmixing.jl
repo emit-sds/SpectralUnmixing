@@ -145,7 +145,7 @@ function unmix_pixel(library::SpectralLibrary, img_dat_input::Array{Float64}, un
 
         d = img_dat
         if isnothing(unc_dat) == false
-            d += (rand(size(d)) .* 2 .- 1) .* unc_dat
+            d += (rand(size(d)...) .* 2 .- 1) .* unc_dat
         end
 
         if occursin("pinv", optimization)
