@@ -247,8 +247,7 @@ function unmix_line(line::Int64, reflectance_file::String, mode::String, refl_no
                     max_combinations::Int64 = -1, optimization="bvls")
 
     Random.seed!(13)
-    println(line)
-
+    
     img_dat, unc_dat, good_data = load_line(reflectance_file, reflectance_uncertainty_file, line, library.good_bands, refl_nodata)
     if isnothing(img_dat)
         return line, nothing, good_data, nothing, nothing
@@ -256,6 +255,8 @@ function unmix_line(line::Int64, reflectance_file::String, mode::String, refl_no
 
     mixture_results = fill(-9999.0, sum(good_data), size(library.class_valid_keys)[1] + 1)
     complete_fractions = zeros(size(img_dat)[1], size(library.spectra)[1] + 1)
+    
+    start_time = time()
     
     if n_mc > 1
         mixture_results_std = fill(-9999.0, sum(good_data), size(library.class_valid_keys)[1] + 1)
@@ -290,7 +291,7 @@ function unmix_line(line::Int64, reflectance_file::String, mode::String, refl_no
         end
     end
 
-    
+     
     # Solve for each pixel
     for _i in 1:size(img_dat)[1] # Pixel loop
 
@@ -314,7 +315,8 @@ function unmix_line(line::Int64, reflectance_file::String, mode::String, refl_no
         end
 
     end
-
+    
+    @info string("seconds: ", time() - start_time)
     return line, mixture_results, good_data, mixture_results_std, complete_fractions
 
 end
@@ -331,7 +333,7 @@ function unmix_and_write_line(line::Int64, reflectance_file::String, mode::Strin
         max_combinations, optimization)
 
     write_line_results(output_files, line_results, n_mc, write_complete_fractions) 
-
+    
 end
 
 function class_assign_fractions(complete_fractions, library::SpectralLibrary)

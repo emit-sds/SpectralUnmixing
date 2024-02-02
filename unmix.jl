@@ -22,6 +22,7 @@ using Logging
 using Distributed
 using Printf
 
+
 @everywhere using SpectralUnmixing
 
 function main()
@@ -44,7 +45,7 @@ function main()
     add_argument!(parser, "--combination_type", type = String, default = "class-even", help = "style of combinations.  Options = [all, class-even]")
     add_argument!(parser, "--max_combinations", type = Int64, default = -1, help = "set the maximum number of enmember combinations (relevant only to mesma)")
     add_argument!(parser, "--num_endmembers", type = Int64, default = [3], nargs="+", help = "set the maximum number of enmember to use")
-    add_argument!(parser, "--write_complete_fractions", type=Bool, default = 0, help = "flag to indicate if per-endmember fractions should be written out")
+    add_argument!(parser, "--write_complete_fractions", type=Bool, default = 1, help = "flag to indicate if per-endmember fractions should be written out")
     add_argument!(parser, "--optimizer", type=String, default = "bvls", help = "Choice of core optimization.  Options = [inverse, bvls, ldsqp]")
     add_argument!(parser, "--start_line", type=Int64, default = 1, help = "line of image to start on")
     add_argument!(parser, "--end_line", type=Int64, default = -1, help = "line of image to stop on (-1 does the full image)")
@@ -64,6 +65,10 @@ function main()
         valid_keys = args.endmember_classes
     end
 
+    @info string("Unmixing was processed on: ", gethostname())
+    @info string("Reflectance file processed: ", args.reflectance_file)
+    @info string("Arguments: $(args)")
+    
     endmember_library = SpectralLibrary(args.endmember_file, args.endmember_class_header, args.spectral_starting_column, args.truncate_end_columns, valid_keys)
     load_data!(endmember_library)
     filter_by_class!(endmember_library)
@@ -73,10 +78,10 @@ function main()
 
     remove_wavelength_region_inplace!(endmember_library, true)
 
-    reflectance_dataset = ArchGDAL.read(args.reflectance_file)
+    reflectance_dataset = ArchGDAL.read(args.reflectance_file, alloweddrivers =["ENVI"])
     x_len = Int64(ArchGDAL.width(reflectance_dataset))
     y_len = Int64(ArchGDAL.height(reflectance_dataset))
-
+    
     if args.start_line > y_len || args.start_line < 1;
        throw(ArgumentError(string("start_line must be less than length of scene, and greater than 1.  Provided: ", args.start_line, ", Scene length: ", y_len)))
     end
@@ -93,7 +98,7 @@ function main()
     @info string("Running from lines: ", args.start_line, " - ", end_line)
 
     if args.reflectance_uncertainty_file != ""
-        reflectance_uncertainty_dataset = ArchGDAL.read(args.reflectance_uncertainty_file)
+        reflectance_uncertainty_dataset = ArchGDAL.read(args.reflectance_uncertainty_file, alloweddrivers =["ENVI"])
         if ArchGDAL.width(reflectance_uncertainty_dataset) != x_len error("Reflectance_uncertainty_file size mismatch") end
         if ArchGDAL.height(reflectance_uncertainty_dataset) != y_len error("Reflectance_uncertainty_file size mismatch") end
         reflectance_uncertainty_dataset = nothing
@@ -132,12 +137,14 @@ function main()
     if args.n_mc > 1
         set_band_names(output_files[2], output_band_names)
     end
-
-    results = pmap(line->unmix_and_write_line(line,args.reflectance_file, args.mode, args.refl_nodata,
+    
+    @info string("Unmix output files: ", output_files)
+    
+    results = @time pmap(line->unmix_and_write_line(line,args.reflectance_file, args.mode, args.refl_nodata,
                args.refl_scale, args.normalization, endmember_library, output_files, args.write_complete_fractions,
                args.reflectance_uncertainty_file, args.n_mc,
                args.combination_type, args.num_endmembers, args.max_combinations, args.optimizer), args.start_line:end_line)
-
+    
 end
 
 

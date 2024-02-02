@@ -64,7 +64,7 @@ function write_results(output_files::Vector{String}, output_bands::Vector, x_len
         end
     end
     output = permutedims( output, (2,1,3))
-    outDataset = ArchGDAL.read(output_files[1], flags=1)
+    outDataset = ArchGDAL.read(output_files[1], flags=1, alloweddrivers =["ENVI"])
     ArchGDAL.write!(outDataset, output, [1:size(output)[end];], 0, 0, size(output)[1], size(output)[2])
     outDataset = nothing
 
@@ -79,7 +79,7 @@ function write_results(output_files::Vector{String}, output_bands::Vector, x_len
         end
 
         output = permutedims( output, (2,1,3))
-        outDataset = ArchGDAL.read(output_files[ods_idx], flags=1)
+        outDataset = ArchGDAL.read(output_files[ods_idx], flags=1, alloweddrivers =["ENVI"])
         ArchGDAL.write!(outDataset, output, [1:size(output)[end];], 0, 0, size(output)[1], size(output)[2])
         outDataset = nothing
         ods_idx += 1
@@ -95,7 +95,7 @@ function write_results(output_files::Vector{String}, output_bands::Vector, x_len
         end
 
         output = permutedims( output, (2,1,3))
-        outDataset = ArchGDAL.read(output_files[ods_idx], flags=1)
+        outDataset = ArchGDAL.read(output_files[ods_idx], flags=1, alloweddrivers =["ENVI"])
         ArchGDAL.write!(outDataset, output, [1:size(output)[end];], 0, 0, size(output)[1], size(output)[2])
         outDataset = nothing
         ods_idx += 1
@@ -109,7 +109,7 @@ function write_line_results(output_files::Vector{String}, results, n_mc::Int64, 
     if isnothing(results[2]) == false
         output = zeros(size(results[2])[1], 1, size(results[2])[2]) .- 9999
         output[results[3], 1, :] = results[2]
-        outDataset = ArchGDAL.read(output_files[1], flags=1)
+        outDataset = ArchGDAL.read(output_files[1], flags=1, alloweddrivers =["ENVI"])
         ArchGDAL.write!(outDataset, output, [1:size(output)[end];], 0, results[1]-1, size(output)[1], 1)
         outDataset = nothing
     end
@@ -120,7 +120,7 @@ function write_line_results(output_files::Vector{String}, results, n_mc::Int64, 
             output = zeros(size(results[4])[1], 1, size(results[4])[2]) .- 9999
             output[results[3], 1, :] = results[4]
 
-            outDataset = ArchGDAL.read(output_files[ods_idx], flags=1)
+            outDataset = ArchGDAL.read(output_files[ods_idx], flags=1, alloweddrivers =["ENVI"])
             ArchGDAL.write!(outDataset, output, [1:size(output)[end];], 0, results[1]-1, size(output)[1], 1)
             outDataset = nothing
         end
@@ -132,7 +132,7 @@ function write_line_results(output_files::Vector{String}, results, n_mc::Int64, 
             output = zeros(size(results[5])[1], 1, size(results[5])[2]) .- 9999
             output[results[3], 1, :] = results[5]
 
-            outDataset = ArchGDAL.read(output_files[ods_idx], flags=1)
+            outDataset = ArchGDAL.read(output_files[ods_idx], flags=1, alloweddrivers =["ENVI"])
             ArchGDAL.write!(outDataset, output, [1:size(output)[end];], 0, results[1]-1, size(output)[1], 1)
             outDataset = nothing
         end
@@ -143,16 +143,16 @@ end
 
 function load_line(reflectance_file::String, reflectance_uncertainty_file::String, line::Int64,
                        good_bands::Array{Bool}, refl_nodata::Float64)
-
-        reflectance_dataset = ArchGDAL.read(reflectance_file)
-        img_dat = convert(Array{Float64},ArchGDAL.readraster(reflectance_file)[:,line,:])
+        
+        reflectance_dataset = ArchGDAL.read(reflectance_file, alloweddrivers =["ENVI"])
+        img_dat = convert(Array{Float64},ArchGDAL.readraster(reflectance_file, alloweddrivers =["ENVI"])[:,line,:])
         img_dat = img_dat[:, good_bands]
         good_data = .!all(img_dat .== refl_nodata, dims=2)[:,1]
         img_dat = img_dat[good_data,:]
 
         if sum(good_data) >= 1
             if reflectance_uncertainty_file != ""
-                unc_dat = convert(Array{Float64},ArchGDAL.readraster(reflectance_uncertainty_file)[:,line,:])
+                unc_dat = convert(Array{Float64},ArchGDAL.readraster(reflectance_uncertainty_file, alloweddrivers =["ENVI"])[:,line,:])
                 unc_dat = unc_dat[:, good_bands]
                 unc_dat = unc_dat[good_data,:]
             else

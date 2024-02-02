@@ -66,18 +66,22 @@ end
 
 function get_good_bands_mask(wavelengths::Array{Float64}, wavelength_pairs)
     good_bands = ones(Bool, length(wavelengths))
+    
+    if length(wavelengths) > 7 
+        for wvp in wavelength_pairs
+            wavelength_diff = wavelengths .- wvp[1]
+            wavelength_diff[wavelength_diff .< 0] .= maximum(filter(!isnan, wavelength_diff))
+            lower_index = nanargmin(wavelength_diff)
 
-    for wvp in wavelength_pairs
-        wavelength_diff = wavelengths .- wvp[1]
-        wavelength_diff[wavelength_diff .< 0] .= maximum(filter(!isnan, wavelength_diff))
-        lower_index = nanargmin(wavelength_diff)
-
-        wavelength_diff = wvp[2] .- wavelengths
-        wavelength_diff[wavelength_diff .< 0] .= maximum(filter(!isnan, wavelength_diff))
-        upper_index = nanargmin(wavelength_diff)
-        good_bands[lower_index:upper_index] .= false
+            wavelength_diff = wvp[2] .- wavelengths
+            wavelength_diff[wavelength_diff .< 0] .= maximum(filter(!isnan, wavelength_diff))
+            upper_index = nanargmin(wavelength_diff)
+            good_bands[lower_index:upper_index] .= false
+        end
+    else
+        good_bands = good_bands
+    
     end
-
     return good_bands
 end
 
