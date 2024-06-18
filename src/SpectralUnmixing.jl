@@ -131,6 +131,7 @@ function results_from_mc(results::Matrix{Float64}, cost::Vector{Float64}, mode::
 end
 
 function unmix_pixel(library::SpectralLibrary, img_dat_input::Array{Float64}, unc_dat, class_idx, options, mode::String, n_mc::Int64, num_endmembers::Vector{Int64}, normalization::String, optimization::String, max_combinations::Int64, combination_type::String)
+    
 
     if length(size(img_dat_input)) == 1
         img_dat = reshape(img_dat_input, 1, length(img_dat_input))
@@ -178,21 +179,19 @@ function unmix_pixel(library::SpectralLibrary, img_dat_input::Array{Float64}, un
             mc_comp_frac[mc, perm] = res
             scores[mc] = cost
 
-        elseif mode == "mesma"
+        elseif mode == "mesma" || mode == "mesma-best"
             solutions = []
             costs = zeros(size(options)[1]).+1e12
-
             if max_combinations != -1 && length(options) > max_combinations
                 perm = randperm(length(options))[1:max_combinations]
             else
                 perm = convert(Vector{Int64},1:length(options))
             end
-
+            
             for (_comb, comb) in enumerate(options[perm])
                 comb = [c for c in comb]
                 #G = hcat(library.spectra[comb,:], ones(size(library.spectra[comb,:])[1],1))
                 G = scale_data(library.spectra[comb, library.good_bands], library.wavelengths[library.good_bands], normalization)'
-
                 x0 = dolsq(G, d')
                 x0 = x0[:]
                 ls = nothing
@@ -214,6 +213,7 @@ function unmix_pixel(library::SpectralLibrary, img_dat_input::Array{Float64}, un
             scores[mc] = best
 
             mc_comp_frac[mc, [ind for ind in options[perm][best]]] = solutions[best]
+
         else
             error("Invalid mode provided")
         end
@@ -247,8 +247,7 @@ function unmix_line(line::Int64, reflectance_file::String, mode::String, refl_no
                     max_combinations::Int64 = -1, optimization="bvls")
 
     Random.seed!(13)
-    println(line)
-
+    
     img_dat, unc_dat, good_data = load_line(reflectance_file, reflectance_uncertainty_file, line, library.good_bands, refl_nodata)
     if isnothing(img_dat)
         return line, nothing, good_data, nothing, nothing
@@ -257,6 +256,7 @@ function unmix_line(line::Int64, reflectance_file::String, mode::String, refl_no
     mixture_results = fill(-9999.0, sum(good_data), size(library.class_valid_keys)[1] + 1)
     complete_fractions = zeros(size(img_dat)[1], size(library.spectra)[1] + 1)
     
+        
     if n_mc > 1
         mixture_results_std = fill(-9999.0, sum(good_data), size(library.class_valid_keys)[1] + 1)
         complete_fractions_std = zeros(size(img_dat)[1], size(library.spectra)[1] + 1)
@@ -277,7 +277,7 @@ function unmix_line(line::Int64, reflectance_file::String, mode::String, refl_no
 
     # Prepare combinations if relevant
     options = []
-    if mode == "mesma"
+    if mode == "mesma" || mode == "mesma-best"
         if combination_type == "class-even"
             options = collect(Iterators.product(class_idx...))[:]
         elseif combination_type == "all"
@@ -290,7 +290,8 @@ function unmix_line(line::Int64, reflectance_file::String, mode::String, refl_no
         end
     end
 
-    
+    start_time = time()
+
     # Solve for each pixel
     for _i in 1:size(img_dat)[1] # Pixel loop
 
@@ -314,7 +315,10 @@ function unmix_line(line::Int64, reflectance_file::String, mode::String, refl_no
         end
 
     end
-
+    elapsed_time = time() - start_time 
+    if line != 1 
+        @info string("Line " , line , " run in " , round(elapsed_time, digits=4) , " seconds")
+    end
     return line, mixture_results, good_data, mixture_results_std, complete_fractions
 
 end
@@ -325,13 +329,13 @@ function unmix_and_write_line(line::Int64, reflectance_file::String, mode::Strin
                     reflectance_uncertainty_file::String = "", n_mc::Int64 = 1,
                     combination_type::String = "all", num_endmembers::Vector{Int64} = [2,3],
                     max_combinations::Int64 = -1, optimization="bvls")
-
+    
     line_results = unmix_line(line, reflectance_file, mode, refl_nodata, refl_scale, normalization, library, 
         reflectance_uncertainty_file, n_mc, combination_type, num_endmembers,
         max_combinations, optimization)
 
     write_line_results(output_files, line_results, n_mc, write_complete_fractions) 
-
+    
 end
 
 function class_assign_fractions(complete_fractions, library::SpectralLibrary)
