@@ -3,7 +3,7 @@ using Test
     
 using SpectralUnmixing
 
-datafile = "../data/basic_endmember_library.csv"
+datafile = "data/basic_endmember_library.csv"
 classname = "Class"
 
 @info "Basic Loading"
