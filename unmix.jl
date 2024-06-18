@@ -50,6 +50,7 @@ function main()
     add_argument!(parser, "--start_line", type=Int64, default = 1, help = "line of image to start on")
     add_argument!(parser, "--end_line", type=Int64, default = -1, help = "line of image to stop on (-1 does the full image)")
     add_argument!(parser, "--endmember_classes", type=String, default = [""], help = "Class names to use from the endmember library.  By default, all will be used")
+    add_argument!(parser, "--wavelength_ignore_regions", nargs="+", type=Float64, default = [0,440,1310,1490,1770,2050,2440,2880], help = "Class names to use from the endmember library.  By default, all will be used")
     add_argument!(parser, "--log_file", type = String, default = nothing, help = "log file to write to")
     args = parse_args(parser)
 
@@ -57,6 +58,10 @@ function main()
         logger = Logging.SimpleLogger()
     else
         logger = Logging.SimpleLogger(open(args.log_file, "w+"))
+    end
+
+    if size(args.wavelength_ignore_regions)[1] % 2 != 0
+        throw(ArgumentError("wavelength_ignore_regions must be an even number of values"))
     end
     Logging.global_logger(logger)
 
