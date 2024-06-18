@@ -139,7 +139,7 @@ function main()
     end
     
     @info string("Unmix output files: ", output_files)
-    
+    @info string("total number of workers available: ", nworkers())  
     results = @time pmap(line->unmix_and_write_line(line,args.reflectance_file, args.mode, args.refl_nodata,
                args.refl_scale, args.normalization, endmember_library, output_files, args.write_complete_fractions,
                args.reflectance_uncertainty_file, args.n_mc,

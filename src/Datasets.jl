@@ -105,10 +105,21 @@ end
 
 function write_line_results(output_files::Vector{String}, results, n_mc::Int64, write_complete_fractions::Bool)
     GC.gc()
-
+    
     if isnothing(results[2]) == false
-        output = zeros(size(results[2])[1], 1, size(results[2])[2]) .- 9999
+        
+        output = zeros(size(results[3])[1], 1, size(results[2])[2]) .- 9999
+        
+        #index = 1 
+        #for (_i, condition) in enumerate(results[3])
+        #    if condition == 1
+        #        output[_i, 1, :] = results[2][index, :]
+        #        index += 1
+        #    end
+        #end
+        
         output[results[3], 1, :] = results[2]
+
         outDataset = ArchGDAL.read(output_files[1], flags=1, alloweddrivers =["ENVI"])
         ArchGDAL.write!(outDataset, output, [1:size(output)[end];], 0, results[1]-1, size(output)[1], 1)
         outDataset = nothing
@@ -117,8 +128,15 @@ function write_line_results(output_files::Vector{String}, results, n_mc::Int64, 
 
     if n_mc > 1
         if isnothing(results[4]) == false
-            output = zeros(size(results[4])[1], 1, size(results[4])[2]) .- 9999
-            output[results[3], 1, :] = results[4]
+            output = zeros(size(results[3])[1], 1, size(results[4])[2]) .- 9999
+            
+            index = 1
+            for (_i, condition) in enumerate(results[3])
+                if condition == 1
+                    output[_i, 1, :] = results[4][index, :]
+                    index += 1
+                end
+            end
 
             outDataset = ArchGDAL.read(output_files[ods_idx], flags=1, alloweddrivers =["ENVI"])
             ArchGDAL.write!(outDataset, output, [1:size(output)[end];], 0, results[1]-1, size(output)[1], 1)
@@ -129,9 +147,16 @@ function write_line_results(output_files::Vector{String}, results, n_mc::Int64, 
 
     if write_complete_fractions == 1
         if isnothing(results[5]) == false
-            output = zeros(size(results[5])[1], 1, size(results[5])[2]) .- 9999
-            output[results[3], 1, :] = results[5]
-
+            output = zeros(size(results[3])[1], 1, size(results[5])[2]) .- 9999
+            
+            index = 1
+            for (_i, condition) in enumerate(results[3])
+                if condition == 1
+                    output[_i, 1, :] = results[5][index, :]
+                    index += 1
+                end
+            end
+            
             outDataset = ArchGDAL.read(output_files[ods_idx], flags=1, alloweddrivers =["ENVI"])
             ArchGDAL.write!(outDataset, output, [1:size(output)[end];], 0, results[1]-1, size(output)[1], 1)
             outDataset = nothing
