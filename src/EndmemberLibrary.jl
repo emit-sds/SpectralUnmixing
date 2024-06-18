@@ -67,21 +67,17 @@ end
 function get_good_bands_mask(wavelengths::Array{Float64}, wavelength_pairs)
     good_bands = ones(Bool, length(wavelengths))
     
-    if length(wavelengths) > 7 
-        for wvp in wavelength_pairs
-            wavelength_diff = wavelengths .- wvp[1]
-            wavelength_diff[wavelength_diff .< 0] .= maximum(filter(!isnan, wavelength_diff))
-            lower_index = nanargmin(wavelength_diff)
+    for wvp in wavelength_pairs
+        wavelength_diff = wavelengths .- wvp[1]
+        wavelength_diff[wavelength_diff .< 0] .= maximum(filter(!isnan, wavelength_diff))
+        lower_index = nanargmin(wavelength_diff)
 
-            wavelength_diff = wvp[2] .- wavelengths
-            wavelength_diff[wavelength_diff .< 0] .= maximum(filter(!isnan, wavelength_diff))
-            upper_index = nanargmin(wavelength_diff)
-            good_bands[lower_index:upper_index] .= false
-        end
-    else
-        good_bands = good_bands
-    
+        wavelength_diff = wvp[2] .- wavelengths
+        wavelength_diff[wavelength_diff .< 0] .= maximum(filter(!isnan, wavelength_diff))
+        upper_index = nanargmin(wavelength_diff)
+        good_bands[lower_index:upper_index] .= false
     end
+    good_bands = good_bands
     return good_bands
 end
 
@@ -94,7 +90,7 @@ mutable struct SpectralLibrary
     scale_factor::Float64
     wavelength_regions_ignore
     SpectralLibrary(file_name::String, class_header_name::String, spectral_starting_column::Int64 = 2, truncate_end_columns::Int64 = 0, class_valid_keys = nothing, 
-                    scale_factor = 1.0, wavelength_regions_ignore= [[0,440],[1310,1490],[1770,2050],[2440,2880]]) = 
+                    scale_factor = 1.0, wavelength_regions_ignore= [0,440,1310,1490,1770,2050,2440,2880]) = 
                     new(file_name, class_header_name, spectral_starting_column, truncate_end_columns, class_valid_keys, scale_factor, wavelength_regions_ignore)
 
     spectra
@@ -106,6 +102,13 @@ end
 function load_data!(library::SpectralLibrary)
 
     df = DataFrame(CSV.File(library.file_name))
+
+    paired_sets = []
+    for i in 1:2:size(library.wavelength_regions_ignore)[1]
+        push!(paired_sets, [library.wavelength_regions_ignore[i],library.wavelength_regions_ignore[i+1]])
+    end
+    library.wavelength_regions_ignore = paired_sets
+    @info "Ignoring wavelength regions: " * string(library.wavelength_regions_ignore)
 
     try
         library.spectra = Matrix(df[:,library.spectral_starting_column:end-library.truncate_end_columns])
