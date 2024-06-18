@@ -320,7 +320,7 @@ function unmix_line(line::Int64, reflectance_file::String, mode::String, refl_no
     end
     elapsed_time = time() - start_time 
     if line != 1 
-        @info string("seconds: ", elapsed_time)
+        @info string("Line " , line , " run in " , round(elapsed_time, digits=4) , " seconds")
     end
     return line, mixture_results, good_data, mixture_results_std, complete_fractions
 
