@@ -74,7 +74,8 @@ function main()
     @info string("Reflectance file processed: ", args.reflectance_file)
     @info string("Arguments: $(args)")
     
-    endmember_library = SpectralLibrary(args.endmember_file, args.endmember_class_header, args.spectral_starting_column, args.truncate_end_columns, valid_keys)
+    library_scale_factor=1.0
+    endmember_library = SpectralLibrary(args.endmember_file, args.endmember_class_header, args.spectral_starting_column, args.truncate_end_columns, valid_keys, library_scale_factor, args.wavelength_ignore_regions)
     load_data!(endmember_library)
     filter_by_class!(endmember_library)
 
