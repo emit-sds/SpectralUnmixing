@@ -77,7 +77,6 @@ function get_good_bands_mask(wavelengths::Array{Float64}, wavelength_pairs)
         upper_index = nanargmin(wavelength_diff)
         good_bands[lower_index:upper_index] .= false
     end
-    good_bands = good_bands
     return good_bands
 end
 

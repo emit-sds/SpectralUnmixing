@@ -143,7 +143,6 @@ function unmix_pixel(library::SpectralLibrary, img_dat_input::Array{Float64}, un
     scores = zeros(n_mc)
     for mc in 1:n_mc #monte carlo loop
         Random.seed!(mc)
-        #start_time = time()
 
         d = img_dat
         if isnothing(unc_dat) == false
@@ -214,8 +213,6 @@ function unmix_pixel(library::SpectralLibrary, img_dat_input::Array{Float64}, un
             scores[mc] = best
 
             mc_comp_frac[mc, [ind for ind in options[perm][best]]] = solutions[best]
-            #elapsed_time = time() - start_time
-            #@info string("MC Run: ", mc, " Seconds: ", elapsed_time)
 
         else
             error("Invalid mode provided")
