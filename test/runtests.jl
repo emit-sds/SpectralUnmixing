@@ -1,9 +1,9 @@
 
 using Test
-    
+
 using SpectralUnmixing
 
-datafile = "data/basic_endmember_library.csv"
+datafile = joinpath(@__DIR__, "../data/basic_endmember_library.csv")
 classname = "Class"
 
 @info "Basic Loading"
@@ -89,11 +89,10 @@ for mode in ["sma", "sma-best", "mesma", "mesma-best"]
     end
 
     @info "Unmix Pixel - Mode: " * mode
-    @time mr, mv, cfr, cfv = unmix_pixel(unmixing_library, simulated_rfl, nothing, class_idx, options, mode, n_mc, 
+    @time mr, mv, cfr, cfv = unmix_pixel(unmixing_library, simulated_rfl, nothing, class_idx, options, mode, n_mc,
             num_endmembers, normalization, optimization, max_combinations, combination_type)
     @test sum(mr[1:end-1]) ≈ 1
     @test size(mr) == size(mv)
     @test sum(cfr[1:end-1]) ≈ 1
     @test size(cfr) == size(cfv)
 end
-
