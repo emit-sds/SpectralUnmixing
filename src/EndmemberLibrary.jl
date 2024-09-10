@@ -220,10 +220,10 @@ function brightness_normalize!(library::SpectralLibrary)
 end
 
 function split_library(library::SpectralLibrary, split_fraction::Float64)
-    perm = randperm((library.spectra)[1])
+    perm = randperm(size(library.spectra)[1])
 
-    split_1 = perm[1:round(split_fraction * length(perm))]
-    split_2 = perm[round(split_fraction * length(perm)):end]
+    split_1 = perm[1:Int(round(split_fraction * length(perm)))]
+    split_2 = perm[Int(round(split_fraction * length(perm))):end]
 
     output_library_1 = deepcopy(library)
     output_library_2 = deepcopy(library)
