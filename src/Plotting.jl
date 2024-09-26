@@ -40,7 +40,7 @@ function plot_endmembers(endmember_library::SpectralLibrary; output_name::String
     plot!()
 end
 
-function plot_endmembers_individually(endmember_library::SpectralLibrary; output_name::String = "")
+function plot_endmembers_individually(endmember_library::SpectralLibrary; output_name::String = "", legend_on::Bool = false)
     plots = []
     spectra = endmember_library.spectra
     classes = endmember_library.classes
@@ -57,7 +57,11 @@ function plot_endmembers_individually(endmember_library::SpectralLibrary; output
         xticks!([500, 1000, 1500, 2000, 2500])
     end
     plot(plots...,size=(1000,600),dpi=200)
-    plot!(legend=:outertopright)
+    if legend_on
+        plot!(legend=:outertopright)
+    else
+        plot!(legend=false)
+    end
     if output_name != ""
         savefig(output_name)
     end
