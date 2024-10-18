@@ -300,6 +300,7 @@ function unmix_line(line::Int64, reflectance_file::String, mode::String, refl_no
     img_dat = img_dat ./ refl_scale
 
     class_idx = prepare_combinations(library, combination_type)
+    options = []
     # Prepare combinations if relevant
     if mode == "mesma" || mode == "mesma-best"
         options = prepare_options(library, combination_type, num_endmembers, class_idx)
