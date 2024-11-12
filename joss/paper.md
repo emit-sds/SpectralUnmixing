@@ -19,10 +19,16 @@ authors:
   - name: Vatsal A. Jhalani
     orcid: 0000-0003-0866-0858
     affiliation: "1"
+  - name: Winston Olson-Duvall
+    orcid: 0000-0002-4210-0283
+    affiliation: "1"
+  - name: Sarah R. Lundeen
+    affiliation: "1"
   - name: David R. Thompson
     orcid: 0000-0003-1100-7550
     affiliation: "1"
   - name: Robert O. Green
+    orcid: 0000-0001-9447-3076
     affiliation: "1"
 affiliations:
  - name: Jet Propulsion Laboratory, California Institute of Technology, USA
@@ -53,7 +59,7 @@ The code was designed for NASA's Earth Surface Mineral Dust Source Investigation
 In particular, no central framework exists in which different unmixing strategies could be efficiently tested against one another.
 `SpectralUnmixing` addresses this issue by drawing on a vast amount of existing literature and bringing the various proposed strategies together into a single codebase.
 The framework also leverages a rich set of Julia packages for linear algebra, optimization, remote sensing data IO and more, resulting in a highly flexible and scalable unmixing package.
-`SpectralUnmixing` has already supported the development of new unmixing strategies by accelerating the process of combining different components of the overall unmixing problem in novel ways [@OchoaQuantifying; @OchoaEvaluating]
+`SpectralUnmixing` has already supported the development of new unmixing strategies by accelerating the process of combining different components of the overall unmixing problem in novel ways [@OchoaQuantifying]
 The package's scalability and breadth will allow it to continue providing this kind of coupled flexibility and operational capacity into the future.
 
 ![Example usage of `SpectralUnmixing`: fractional cover from an EMIT spectral image.  A) Red-green-blue (RGB) image of sample EMIT reflectance data observed near Sacramento, CA, USA with zoom-ins around labeled points (left).  B) Fractional cover output of `SpectralUnmixing` driver script `unmix.jl` on EMIT reflectance image with zoom-ins around labeled points (right). The RGB values in the fractional cover correspond to fractions of endmember library classes: non-photosynthetic vegetation (npv), photosynthetic vegetation (pv), and soil, respectively. C) EMIT reflectance spectra of sample points labeled in A) and B), chosen to each have high fractions of each of the 3 classes. Each spectra is colored by the RGB value corresponding to their class fraction. Here, `unmix.jl` was run using the included example endmember library and with the arguments `--normalization brightness --mode sma-best --n_mc 20 --num_endmembers 30`\label{fig:unmixing}](fig.pdf)
