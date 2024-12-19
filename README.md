@@ -44,3 +44,10 @@ Preset maximum number of endmembers used for unmixing:
 ```
 julia -p 10 unmix.jl REFLECTANCE_IMAGE ENDMEMBER_LIBRARY ENDMEMBER_COLUMN OUTPUT_BASE --mode sma --n_mc 50 --normalization brightness --num_endmembers 10
 ```
+
+## EMIT-style Runs
+Following [Ochoa et al.](https://d197for5662m48.cloudfront.net/documents/publicationstatus/232672/preprint_pdf/973acea360e10b97752976bf19e5c071.pdf), to run SpectralUnmixing in the same manner as EMIT, use:
+
+```
+julia -p 64 unmix.jl REFLECTANCE_IMAGE ENDMEMBER_LIBRARY ENDMEMBER_COLUMN OUTPUT_BASE --mode sma-best --normalization brightness --num_endmember 30 --n_mc 20 --reflectance_uncertainty_file REFLECTANCE_UNCERTAINTY_IMAGE
+```
