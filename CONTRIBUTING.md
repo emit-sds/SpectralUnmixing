@@ -146,11 +146,11 @@ Contributors
 The github maintainers, responsible for handling pull requests, are:
 
 * Philip G. Brodrick philip.brodrick@jpl.nasa.gov
+* Vatsal Jhalani (NASA JPL)
 
 Thanks to the following regular contributors:
 
 * Francisco Ochoa (UCLA)
-* Vatsal Jhalani (NASA JPL)
 
 The SpectralUnmixing codebase was made possible with support from the Earth Surface Mineral Dust Source Investigation (EMIT), an Earth Ventures-Instrument (EV4) Mission.
 The initial research took place at the Jet Propulsion Laboratory, California Institute of Technology, 4800 Oak Grove Dr., Pasadena, CA 91109 USA.
