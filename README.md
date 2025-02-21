@@ -4,6 +4,7 @@ SpectralUnmixing
 
 [![version](https://github.com/emit-sds/SpectralUnmixing/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/emit-sds/SpectralUnmixing/actions/workflows/unit-tests.yml/)
 [![](https://img.shields.io/github/license/emit-sds/SpectralUnmixing)](https://github.com/emit-sds/SpectralUnmixing/blob/master/LICENSE)
+[![](https://img.shields.io/badge/docs-latest-blue)](https://emit-sds.github.io/SpectralUnmixing/dev/)
 
 
 
