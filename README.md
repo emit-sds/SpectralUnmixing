@@ -1,6 +1,12 @@
 <h1 align="center">
 SpectralUnmixing
 </h1>
+
+[![version](https://github.com/emit-sds/SpectralUnmixing/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/emit-sds/SpectralUnmixing/actions/workflows/unit-tests.yml/)
+[![](https://img.shields.io/github/license/emit-sds/SpectralUnmixing)](https://github.com/emit-sds/SpectralUnmixing/blob/master/LICENSE)
+
+
+
 A general, fast, flexible, and including spectral unmixing package.  Oriented towards VSWIR imaging spectroscopy data but applicable for different sensor types.  Includes options for different treatments of endmember library assemblages, including MESMA and bootstrapping (aka monte carlo) strategies.
 
 ## Installation
