@@ -22,7 +22,6 @@ using Logging
 using Distributed
 using Printf
 
-
 @everywhere using SpectralUnmixing
 
 function main()
@@ -46,6 +45,7 @@ function main()
     add_argument!(parser, "--max_combinations", type = Int64, default = -1, help = "set the maximum number of enmember combinations (relevant only to mesma)")
     add_argument!(parser, "--num_endmembers", type = Int64, default = [3], nargs="+", help = "set the maximum number of enmember to use")
     add_argument!(parser, "--write_complete_fractions", type=Bool, default = 1, help = "flag to indicate if per-endmember fractions should be written out")
+    add_argument!(parser, "--write_spectral_residual", type=Bool, default = 1, help = "flag to indicate if spectral residuals should be written out")
     add_argument!(parser, "--optimizer", type=String, default = "bvls", help = "Choice of core optimization.  Options = [inverse, bvls, ldsqp]")
     add_argument!(parser, "--start_line", type=Int64, default = 1, help = "line of image to start on")
     add_argument!(parser, "--end_line", type=Int64, default = -1, help = "line of image to stop on (-1 does the full image)")
@@ -122,7 +122,7 @@ function main()
     n_classes = length(unique(endmember_library.classes))
     output_bands = [n_classes + 1]
     output_files = [string(args.output_file_base , "_fractional_cover")]
-
+    
     if args.n_mc > 1
         push!(output_bands, n_classes + 1)
         push!(output_files, string(args.output_file_base , "_fractional_cover_uncertainty"))
@@ -132,6 +132,15 @@ function main()
         push!(output_bands, size(endmember_library.spectra)[1] + 1)
         push!(output_files,string(args.output_file_base , "_complete_fractions") )
     end
+
+
+    #---------XXXXXXXXXXXXX
+    if args.write_spectral_residual == 1
+            push!(output_bands, size(endmember_library.spectra)[1] + 1)
+            push!(output_files,string(args.output_file_base , "_spectral_resudial") )
+        end
+    #---------XXXXXXXXXXXXX
+
 
     output_band_names = copy(endmember_library.class_valid_keys)
     println(output_band_names)
@@ -143,12 +152,20 @@ function main()
     if args.n_mc > 1
         set_band_names(output_files[2], output_band_names)
     end
-    
+   
+    #---------XXXXXXXXXXXXX
+    if args.write_spectral_residual == 1
+        z_len = [size(refl_file_wl)[1]]
+        initiate_output_datasets([output_files[3]], x_len, y_len, z_len, reflectance_dataset)
+        band_names = read_envi_wavelengths(args.reflectance_file)
+        set_band_names(output_files[3], string.(band_names))
+    end 
+
     @info string("Unmix output files: ", output_files)
     @info string("total number of workers available: ", nworkers())  
     results = @time pmap(line->unmix_and_write_line(line,args.reflectance_file, args.mode, args.refl_nodata,
                args.refl_scale, args.normalization, endmember_library, output_files, args.write_complete_fractions,
-               args.reflectance_uncertainty_file, args.n_mc,
+               args.write_spectral_residual, args.reflectance_uncertainty_file, args.n_mc,
                args.combination_type, args.num_endmembers, args.max_combinations, args.optimizer), args.start_line:end_line)
     
 end
