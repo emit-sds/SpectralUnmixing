@@ -587,14 +587,7 @@ function unmix_and_write_line(line::Int64, reflectance_file::String, mode::Strin
    
     write_line_results(output_files, line_results, n_mc, write_complete_fractions, 
         write_spectral_residual)
-end
-
-function compute_residual(line_results)
-
-
-
-
-end    
+end  
 
 """
     simulate_pixel(library::SpectralLibrary, max_components::Int64,
