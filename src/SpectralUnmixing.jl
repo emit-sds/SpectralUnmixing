@@ -261,6 +261,8 @@ function unmix_pixel(library::SpectralLibrary, img_dat_input::Array{Float64}, un
     end
 
     mc_comp_frac = zeros(n_mc, size(library.spectra)[1] + 1)
+    # save coefficients that are scaled back to original and not normalized for spec res
+    comp_frac_unscaled = zeros(n_mc, size(library.spectra)[1] + 1)
     scores = zeros(n_mc)
     for mc in 1:n_mc #monte carlo loop
         Random.seed!(mc)
@@ -283,7 +285,7 @@ function unmix_pixel(library::SpectralLibrary, img_dat_input::Array{Float64}, un
                 class_idx, num_endmembers, combination_type, size(library.spectra)[1]
             )
             G = library.spectra[perm, library.good_bands]
-            #-------------XXXXXXXXX
+            
             G, norm = scale_data(G, library.wavelengths[library.good_bands], normalization)
             G = G'
             x0 = dolsq(G, d', method=inverse_method)
@@ -302,12 +304,14 @@ function unmix_pixel(library::SpectralLibrary, img_dat_input::Array{Float64}, un
                 r = G * x0 - d[:]
                 cost = dot(r, r)
             end
-            #-----------XXXXXXX
-            mc_comp_frac[mc, perm] = res ./ vec(norm)
+            
+            mc_comp_frac[mc, perm] = res
+            comp_frac_unscaled[mc, perm] = res ./ vec(norm) 
             scores[mc] = cost
 
         elseif mode == "mesma" || mode == "mesma-best"
             solutions = []
+            solutions_unscaled = []
             costs = zeros(size(options)[1]) .+ 1e12
             if max_combinations != -1 && length(options) > max_combinations
                 perm = randperm(length(options))[1:max_combinations]
@@ -340,14 +344,16 @@ function unmix_pixel(library::SpectralLibrary, img_dat_input::Array{Float64}, un
                     r = G * x0 - d[:]
                     costs[_comb] = dot(r, r)
                 end
-                #-----------XXXXXXX
-                push!(solutions, ls ./ vec(norm))
+                
+                push!(solutions, ls)
+                push!(solutions_unscaled, ls ./ vec(norm))
 
             end
             best = argmin(costs)
             scores[mc] = best
 
             mc_comp_frac[mc, [ind for ind in options[perm][best]]] = solutions[best]
+            comp_frac_unscaled[mc, [ind for ind in options[perm][best]]] = solutions_unscaled[best]
 
         else
             error("Invalid mode provided")
@@ -358,6 +364,8 @@ function unmix_pixel(library::SpectralLibrary, img_dat_input::Array{Float64}, un
     mc_comp_frac[mc_comp_frac.<0] .= 0
     mc_comp_frac[:, end] = sum(mc_comp_frac, dims=2)
     mc_comp_frac[:, 1:end-1] = mc_comp_frac[:, 1:end-1] ./ mc_comp_frac[:, end]
+
+    comp_frac_unscaled[:, end] = sum(comp_frac_unscaled, dims=2)
 
     # Aggregate results from per-library to per-unique-class
     mixture_results = zeros(size(mc_comp_frac)[1], length(library.class_valid_keys) + 1)
@@ -371,8 +379,9 @@ function unmix_pixel(library::SpectralLibrary, img_dat_input::Array{Float64}, un
 
     output_mixture, output_mixture_var = results_from_mc(mixture_results, scores, mode)
     output_comp_frac, output_comp_frac_var = results_from_mc(mc_comp_frac, scores, mode)
+    output_unscaled, _ = results_from_mc(comp_frac_unscaled, scores, mode)
 
-    return output_mixture, output_mixture_var, output_comp_frac, output_comp_frac_var
+    return output_mixture, output_mixture_var, output_comp_frac, output_comp_frac_var, output_unscaled
 end
 
 """
@@ -486,11 +495,9 @@ function unmix_line(line::Int64, reflectance_file::String, mode::String,
     mixture_results = fill(-9999.0, sum(good_data), size(library.class_valid_keys)[1] + 1)
     complete_fractions = zeros(size(img_dat)[1], size(library.spectra)[1] + 1)
 
-    #---------XXXXXXXXXXXXX
     # Initiate spectral residual array with full set of wavelengths
     nbands = size(read_envi_wavelengths(reflectance_file))[1]
     spectral_residual = zeros(size(img_dat)[1], nbands) .- 9999
-    #---------XXXXXXXXXXXXX
 
     if n_mc > 1
         mixture_results_std =
@@ -523,7 +530,7 @@ function unmix_line(line::Int64, reflectance_file::String, mode::String,
             lud = unc_dat[_i:_i, :]
         end
 
-        loc_mixture_res, loc_mixture_var, loc_cf_res, loc_cf_var =
+        loc_mixture_res, loc_mixture_var, loc_cf_res, loc_cf_var, cf_unscaled =
             unmix_pixel(library, lid,
                 lud, class_idx, options, mode, n_mc, num_endmembers, normalization,
                 optimization, max_combinations, combination_type
@@ -532,12 +539,10 @@ function unmix_line(line::Int64, reflectance_file::String, mode::String,
         complete_fractions[_i, :] = loc_cf_res
         mixture_results[_i, :] = loc_mixture_res
 
-        #---------XXXXXXXXXXXXX
-        # denormalize coefficients and get predicted values
-        coefs = loc_cf_res[1:end-1] .* loc_cf_res[end]
+        # get predicted spectra from unscaled and unnormalized coefs
+        coefs = cf_unscaled[1:end-1]
         fit_spectrum = library.spectra'[library.good_bands, :] * coefs   
         spectral_residual[_i, library.good_bands] = lid - fit_spectrum'
-        #---------XXXXXXXXXXXXX
 
         if n_mc > 1
             complete_fractions_std[_i, :] = loc_cf_var
@@ -579,9 +584,9 @@ function unmix_and_write_line(line::Int64, reflectance_file::String, mode::Strin
         reflectance_uncertainty_file, n_mc, combination_type, num_endmembers,
         max_combinations, optimization
     )   
-
-    #---------XXXXXXXXXXXXX    
-    write_line_results(output_files, line_results, n_mc, write_complete_fractions, write_spectral_residual)
+   
+    write_line_results(output_files, line_results, n_mc, write_complete_fractions, 
+        write_spectral_residual)
 end
 
 function compute_residual(line_results)

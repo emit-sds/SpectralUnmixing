@@ -111,10 +111,6 @@ function get_good_bands_mask(wavelengths::Array{Float64}, wavelength_pairs)
         good_bands[lower_index:upper_index] .= false
     end
 
-    # conditions = [((r[1] .<= wavelengths) .& (wavelengths .<= r[2])) for r in wavelength_pairs]
-    # bad_bands = reduce(.|, conditions)
-    # good_bands = Bool.(1 .- bad_bands)
-
     return good_bands
 end
 

@@ -133,14 +133,11 @@ function main()
         push!(output_files,string(args.output_file_base , "_complete_fractions") )
     end
 
-
-    #---------XXXXXXXXXXXXX
+    # if True, write a file with spectral residuals
     if args.write_spectral_residual == 1
             push!(output_bands, size(endmember_library.spectra)[1] + 1)
             push!(output_files,string(args.output_file_base , "_spectral_resudial") )
         end
-    #---------XXXXXXXXXXXXX
-
 
     output_band_names = copy(endmember_library.class_valid_keys)
     println(output_band_names)
@@ -153,7 +150,7 @@ function main()
         set_band_names(output_files[2], output_band_names)
     end
    
-    #---------XXXXXXXXXXXXX
+    # if True, write a file with spectral residuals
     if args.write_spectral_residual == 1
         z_len = [size(refl_file_wl)[1]]
         initiate_output_datasets([output_files[3]], x_len, y_len, z_len, reflectance_dataset)

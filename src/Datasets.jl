@@ -247,7 +247,7 @@ function write_line_results(output_files::Vector{String}, results, n_mc::Int64,
         ods_idx += 1
     end
 
-    #---------XXXXXXXXXXXXX 
+    # if True, write spectral residual file
     if write_spectral_residual == 1
         if isnothing(results[6]) == false
             output = zeros(size(results[3])[1], 1, size(results[6])[2]) .- 9999
