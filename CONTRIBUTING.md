@@ -1,5 +1,3 @@
-.. _contributing:
-
 Contributing
 ============
 
@@ -16,9 +14,6 @@ If you have ideas for new additions, that's great - please contact the maintaine
 at the addresses given below, and we can coordinate efforts.  Our general policy
 is to for the maintainers to delegate technical authority to individuals to make
 changes and additions to specific topics.
-
-.. contents:: Table of Contents
-    :depth: 2
 
 
 Getting Started
@@ -42,10 +37,9 @@ Then, create a branch with a descriptive name.  A good branch name starts with
 the issue number you are working on followed by some descriptive text.  For
 example, if you are working on issue #113 you would run:
 
-.. code::
-
+```
   git checkout -b 113-add-spectral-residual
-
+```
 
 
 Testing
@@ -67,21 +61,19 @@ At this point, you are ready to implement your changes!
 As you develop, you should make sure that your branch doesn't veer too far from SpectralUnmixing's dev branch.  To do this, switch back to your dev branch and make
 sure it's up to date with SpectralUnmixing's dev branch:
 
-.. code::
-
+```
   git remote add upstream https://github.com/emit-sds/SpectralUnmixing.git
   git checkout dev
   git pull upstream dev
-
+```
 
 Then update your feature branch from your local copy of dev, and push it!  We recommend using git's rebase call when possible.
 
-.. code::
-
+```
   git checkout 113-add-spectral-residual
   git rebase dev
   git push --set-upstream origin 113-add-spectral-residual
-
+```
 
 When you are ready to submit your changes back to the SpectralUnmixing repo, go to GitHub
 and make a `Pull Request <https://help.github.com/articles/creating-a-pull-request/>`_
@@ -94,11 +86,11 @@ has changed, and that you need to update your branch so it's easier to merge.
 
 Here's the suggested workflow:
 
-.. code::
-
+```
   git checkout 113-add-spectral-residual
   git pull --rebase upstream dev
   git push --force-with-lease 113-add-spectral-residual
+```
 
 Project Decision Making
 -----------------------
