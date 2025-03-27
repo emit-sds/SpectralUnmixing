@@ -195,7 +195,7 @@ subsequent output file.
 to the subsequent output file.
 """
 function write_line_results(output_files::Vector{String}, results, n_mc::Int64,
-    write_complete_fractions::Bool)
+    write_complete_fractions::Bool, write_spectral_residual::Bool)
 
     GC.gc()
 
@@ -217,7 +217,7 @@ function write_line_results(output_files::Vector{String}, results, n_mc::Int64,
         if isnothing(results[4]) == false
             output = zeros(size(results[3])[1], 1, size(results[4])[2]) .- 9999
             output[results[3], 1, :] = results[4]
-
+            
             outDataset = ArchGDAL.read(
                 output_files[ods_idx], flags=1, alloweddrivers=["ENVI"]
             )
@@ -234,7 +234,7 @@ function write_line_results(output_files::Vector{String}, results, n_mc::Int64,
         if isnothing(results[5]) == false
             output = zeros(size(results[3])[1], 1, size(results[5])[2]) .- 9999
             output[results[3], 1, :] = results[5]
-
+            
             outDataset = ArchGDAL.read(
                 output_files[ods_idx], flags=1, alloweddrivers=["ENVI"]
             )
@@ -246,6 +246,30 @@ function write_line_results(output_files::Vector{String}, results, n_mc::Int64,
         end
         ods_idx += 1
     end
+
+    # if True, write spectral residual file
+    if write_spectral_residual == 1
+        if isnothing(results[6]) == false
+            output = zeros(size(results[3])[1], 1, size(results[6])[2]) .- 9999
+            output[results[3], 1, :] = results[6]
+            
+            outDataset = ArchGDAL.read(
+                output_files[ods_idx], flags=1, alloweddrivers=["ENVI"]
+            )
+            ArchGDAL.write!(
+                outDataset, 
+                output, 
+                [1:size(output)[end];], 
+                0, 
+                results[1] - 1,
+                size(output)[1], 
+                1
+            )
+            outDataset = nothing
+        end
+        ods_idx += 1
+    end    
+
 end
 
 """
