@@ -1,0 +1,4 @@
+# Index
+```@autodocs
+Modules = [SpectralUnmixing]
+```
