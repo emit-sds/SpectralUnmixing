@@ -3,11 +3,29 @@ using Test
 
 using SpectralUnmixing
 
-datafile = joinpath(@__DIR__, "../data/basic_endmember_library.csv")
+unmix_jl = joinpath(@__DIR__, "../unmix.jl")
+dat_dir = joinpath(@__DIR__, "../data")
+refl_file = joinpath(dat_dir, "ang20170323t202244_rdn_7000-7010")
+spec_lib = joinpath(dat_dir, "basic_endmember_library.csv")
 classname = "Class"
 
+@info "Basic CLI test"
+tmp_dir = mktempdir(@__DIR__) do dir
+    @info "Creating temp directory: $dir"
+    output_file_base = joinpath(dir, "test_output")
+    args = [
+        refl_file,
+        spec_lib,
+        classname,
+        output_file_base
+    ]
+    cmd = `julia $unmix_jl $args`
+    @time proc = run(cmd)
+    @test success(cmd)
+end
+
 @info "Basic Loading"
-lib = load_data!(SpectralLibrary(datafile, classname))
+lib = load_data!(SpectralLibrary(spec_lib, classname))
 @test isnothing(lib) == false
 
 @time @test isnothing(lib.spectra) == false
@@ -18,22 +36,22 @@ tmplib = deepcopy(lib)
 filter_by_class!(tmplib)
 @time @test length(lib.classes) == length(tmplib.classes)
 
-tmplib =  load_data!(SpectralLibrary(datafile, classname, 2, 0, [unique(lib.classes)[1]]))
+tmplib = load_data!(SpectralLibrary(spec_lib, classname, 2, 0, [unique(lib.classes)[1]]))
 filter_by_class!(tmplib)
 @time @test length(lib.classes) != length(tmplib.classes)
 @time @test length(unique(tmplib.classes)) == 1
-tmplib=nothing
+tmplib = nothing
 
 @info "Remove wavelength region inplace"
 
-tmplib =  load_data!(SpectralLibrary(datafile, classname))
+tmplib = load_data!(SpectralLibrary(spec_lib, classname))
 
 remove_wavelength_region_inplace!(tmplib)
 @time @test size(lib.spectra) != size(tmplib.spectra)
 
 @info "Wavelength interpolation"
 tmplib = deepcopy(lib)
-new_wl = 400 .+ Vector{Float64}(1:200)*10.
+new_wl = 400 .+ Vector{Float64}(1:200) * 10.0
 interpolate_library_to_new_wavelengths!(tmplib, new_wl)
 @time @test size(tmplib.spectra)[2] == length(new_wl)
 @time @test size(lib.spectra) != size(tmplib.spectra)
@@ -56,7 +74,7 @@ tmplib = deepcopy(lib)
 remove_wavelength_region_inplace!(lib)
 class_idx = []
 for uc in lib.class_valid_keys
-    push!(class_idx, (1:size(lib.classes)[1])[lib.classes .== uc])
+    push!(class_idx, (1:size(lib.classes)[1])[lib.classes.==uc])
 end
 num_components = 3
 seed = 13
@@ -70,12 +88,12 @@ println(simulated_rfl[:])
 for mode in ["sma", "sma-best", "mesma", "mesma-best"]
     n_mc = 2
     mode = "sma-best"
-    num_endmembers=[3]
-    normalization="brightness"
-    optimization="bvls"
+    num_endmembers = [3]
+    normalization = "brightness"
+    optimization = "bvls"
 
-    max_combinations=10000
-    combination_type="class_even"
+    max_combinations = 10000
+    combination_type = "class_even"
 
     unmixing_library = lib
 
@@ -84,13 +102,13 @@ for mode in ["sma", "sma-best", "mesma", "mesma-best"]
     class_idx = []
     if combination_type == "class-even"
         for uc in library.class_valid_keys
-            push!(class_idx, (1:size(unmixing_library.classes)[1])[unmixing_library.classes .== uc])
+            push!(class_idx, (1:size(unmixing_library.classes)[1])[unmixing_library.classes.==uc])
         end
     end
 
     @info "Unmix Pixel - Mode: " * mode
     @time mr, mv, cfr, cfv = unmix_pixel(unmixing_library, simulated_rfl, nothing, class_idx, options, mode, n_mc,
-            num_endmembers, normalization, optimization, max_combinations, combination_type)
+        num_endmembers, normalization, optimization, max_combinations, combination_type)
     @test sum(mr[1:end-1]) ≈ 1
     @test size(mr) == size(mv)
     @test sum(cfr[1:end-1]) ≈ 1
