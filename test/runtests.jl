@@ -5,7 +5,7 @@ using SpectralUnmixing
 
 unmix_jl = joinpath(@__DIR__, "../unmix.jl")
 dat_dir = joinpath(@__DIR__, "../data")
-refl_file = joinpath(dat_dir, "ang20170323t202244_rdn_7000-7010")
+refl_file = joinpath(dat_dir, "emit20250324t221005_jpl_unmix_ex")
 spec_lib = joinpath(dat_dir, "basic_endmember_library.csv")
 classname = "Class"
 
@@ -21,7 +21,7 @@ tmp_dir = mktempdir(@__DIR__) do dir
     ]
     cmd = `julia $unmix_jl $args`
     @time proc = run(cmd)
-    @test success(cmd)
+    @test success(proc)
 end
 
 @info "Basic Loading"
