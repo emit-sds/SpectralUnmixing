@@ -25,6 +25,7 @@ using Printf
 using LinearAlgebra
 using Combinatorics
 using Random
+using NonNegLeastSquares
 
 include("Datasets.jl")
 include("EndmemberLibrary.jl")
@@ -63,7 +64,7 @@ Scale the reflectance data based on specified criteria.
 
 # Arguments
 - `refl::Matrix{Float64}`: Reflectance data either size (n,) or (m,n), where n is the
-number of bands and m the number of pixels.
+number of bands and m the number of pixels. 
 - `wavelengths::Vector{Float64}`: A vector of wavelengths of size (n,).
 - `criteria::String`: Normalization options:
   - `"none"`: No scaling will be applied, and the original reflectance data will be
@@ -76,7 +77,11 @@ number of bands and m the number of pixels.
 ignore.
 
 # Returns
-- A matrix of scaled reflectance data with same dimensions as `refl`.
+- A tuple containing:
+    - `refl./ norm::Matrix{Float64}`: A matrix of scaled reflectance data with same dimensions as `refl`.
+    - `norm::Matrix{Float64}`: A matrix of normalization coefficients corresponding to `refl`. Is used to get
+    unscaled coefficients for spectral residuals. If criteria == "none", the 1 is returned as normalization
+    coefficient.
 """
 function scale_data(refl::Matrix{Float64}, wavelengths::Vector{Float64}, criteria::String,
     bad_regions_wl=[[1300, 1500], [1800, 2000]])
@@ -232,8 +237,8 @@ also [`prepare_options`](@ref).
 - `normalization::String`: The normalization method to apply to the spectral data. See
 [`scale_data`](@ref).
 - `optimization::String`: The optimization approach for unmixing: (e.g., `"bvls"`,
-`"ldsqp"`, or `"inverse"`). Can optionally contain `"pinv"` or `"qr"` to specify the
-inverse method, if applicable.
+`"ldsqp"`, `"inverse"` or `"nnls"`). Can optionally contain `"pinv"` or `"qr"` to specify the
+inverse method, if applicable. Optimization `"nnls"`` can only occur under `"sma"` or `"sma-best"`.
 - `max_combinations::Int64`: Maximum number of combinations to consider.
 - `combination_type::String`: The type of combination (e.g., `"class-even"`). See also
 [`prepare_combinations`](@ref), [`prepare_options`](@ref), [`get_sma_permutation`](@ref).
@@ -248,6 +253,8 @@ inverse method, if applicable.
   `library`, appended with the brightness.
   - `output_comp_frac_var::Vector{Float64}`: The variance of each endmember in the
   `library`, appended with the brightness variance.
+  - `output_unscaled::Vector{Float64}`: Same as output_comp_frac but with normalization reversed
+  for spectral residuals.
 """
 function unmix_pixel(library::SpectralLibrary, img_dat_input::Array{Float64}, unc_dat,
     class_idx, options, mode::String, n_mc::Int64, num_endmembers::Vector{Int64},
@@ -259,7 +266,7 @@ function unmix_pixel(library::SpectralLibrary, img_dat_input::Array{Float64}, un
     else
         img_dat = img_dat_input
     end
-
+    
     mc_comp_frac = zeros(n_mc, size(library.spectra)[1] + 1)
     # save coefficients that are scaled back to original and not normalized for spec res
     comp_frac_unscaled = zeros(n_mc, size(library.spectra)[1] + 1)
@@ -285,7 +292,6 @@ function unmix_pixel(library::SpectralLibrary, img_dat_input::Array{Float64}, un
                 class_idx, num_endmembers, combination_type, size(library.spectra)[1]
             )
             G = library.spectra[perm, library.good_bands]
-            
             G, norm = scale_data(G, library.wavelengths[library.good_bands], normalization)
             G = G'
             x0 = dolsq(G, d', method=inverse_method)
@@ -301,6 +307,11 @@ function unmix_pixel(library::SpectralLibrary, img_dat_input::Array{Float64}, un
                 res, cost = opt_solve(G, d[:], x0, zeros(length(x0)), ones(length(x0)))
             elseif occursin("inverse", optimization)
                 res = x0
+                r = G * x0 - d[:]
+                cost = dot(r, r)
+            elseif occursin("nnls", optimization)
+                res = nonneg_lsq(G, d' ;alg=:nnls)
+                x0 = res
                 r = G * x0 - d[:]
                 cost = dot(r, r)
             end
@@ -405,28 +416,68 @@ end
     prepare_options(library::SpectralLibrary, combination_type::String,
                      num_endmembers::Vector{Int64}, class_idx)
 
-Prepare combinations of endmembers based on the specified combination type.
+Prepare combinations of endmembers based on the specified combination type. 
+
+# Arguments
+- `library::SpectralLibrary`: Endmember library for unmixing.
+- `combination_type::String`: 
+- `class_idx`: A collection of indices indicating class memberships for different
+endmembers in `library.spectra`
+-`subsample::Bool`: Whether to create a subsample of all possible combinations instead
+of a full list of combinations. If the number of classes is high (> 7), the full list will
+not be able to be held in memory. 
+-`max_combinations::Int`: The desired number of combinations to obtain.
+-`seed_value::Int`: If subsample is True, the random seed to fix the combination subsample.
+
+# Returns
+- A matrix of integers of size [max_combinations] representing the combinations of endmember indices.
 
 - Combination type options:
     - `"class-even"``: Generate all combinations where one endmember is selected from each class.
     - `"all"`: Generate all possible combinations of `num_endmembers` spectra.
 """
 function prepare_options(library::SpectralLibrary, combination_type::String,
-    num_endmembers::Vector{Int64}, class_idx)
+                        num_endmembers::Vector{Int64}, class_idx; subsample::Bool = false, 
+                        max_combinations::Int = 100, seed_value::Int = 1234)
 
+    Random.seed!(seed_value)
     # Prepare combinations if relevant
     options = []
-    if combination_type == "class-even"
-        options = collect(Iterators.product(class_idx...))[:]
-    elseif combination_type == "all"
-        for num in num_endmembers
-            combo = [c for c in combinations(1:length(library.classes), num)]
-            push!(options, combo...)
-        end
-    else
-        error("Invalid combiation string")
-    end
 
+    # Prepare combinations if relevant
+    if subsample == false
+        if combination_type == "class-even"
+            options = collect(Iterators.product(class_idx...))[:]
+        elseif combination_type == "all"
+            for num in num_endmembers
+                combo = [c for c in combinations(1:length(library.classes), num)]
+                push!(options, combo...)
+            end
+        else
+            error("Invalid combination string")
+        end
+    else    
+        if combination_type == "class-even"
+        
+            all_combinations = Set()
+            while length(all_combinations) < max_combinations
+                # Randomly select one index from each vector
+                selected = [rand(class_idx[i]) for i in 1:length(class_idx)]
+                push!(all_combinations, selected)
+            end
+
+            options = collect(all_combinations)
+        
+        elseif combination_type == "all"
+                for num in num_endmembers
+                    combo = [c for c in combinations(1:length(library.classes), num)]
+                    push!(options, combo...)
+                end
+            else
+                error("Invalid combination string")
+            end
+    end        
+    
     return options
 end
 
@@ -470,6 +521,7 @@ limit.
   - A boolean mask of pixels with valid data.
   - Standard deviations of the mixture results (if applicable).
   - Complete fractions for each endmember in the unmixing of each pixel.
+  - Spectral residuals for each spectra.
 
 # Notes
 - Initializes a random seed for reproducibility.

@@ -193,6 +193,8 @@ similar structure. Specific elements contain the data to be written to the outpu
 subsequent output file.
 - `write_complete_fractions::Bool`: Indicates whether to write complete fractions
 to the subsequent output file.
+- `write_spectral_residual::Bool`: Indicates whether to write spectral residuals
+as an additional output file.
 """
 function write_line_results(output_files::Vector{String}, results, n_mc::Int64,
     write_complete_fractions::Bool, write_spectral_residual::Bool)
