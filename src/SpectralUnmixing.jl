@@ -420,11 +420,11 @@ Prepare combinations of endmembers based on the specified combination type.
 
 # Arguments
 - `library::SpectralLibrary`: Endmember library for unmixing.
-- `combination_type::String`: 
+- `combination_type::String`: see below.
 - `class_idx`: A collection of indices indicating class memberships for different
 endmembers in `library.spectra`
 -`subsample::Bool`: Whether to create a subsample of all possible combinations instead
-of a full list of combinations. If the number of classes is high (> 7), the full list will
+of a full list of combinations. If the number of classes is high (> 7), the full list might
 not be able to be held in memory. 
 -`max_combinations::Int`: The desired number of combinations to obtain.
 -`seed_value::Int`: If subsample is True, the random seed to fix the combination subsample.
@@ -437,28 +437,20 @@ not be able to be held in memory.
     - `"all"`: Generate all possible combinations of `num_endmembers` spectra.
 """
 function prepare_options(library::SpectralLibrary, combination_type::String,
-                        num_endmembers::Vector{Int64}, class_idx; subsample::Bool = false, 
-                        max_combinations::Int = 100, seed_value::Int = 1234)
+                        num_endmembers::Vector{Int64}, class_idx; 
+                        subsample::Bool = false, 
+                        max_combinations::Int = 100, 
+                        seed_value::Int = 1234)
 
-    Random.seed!(seed_value)
     # Prepare combinations if relevant
     options = []
 
     # Prepare combinations if relevant
-    if subsample == false
+    if subsample
+
+        Random.seed!(seed_value)
         if combination_type == "class-even"
-            options = collect(Iterators.product(class_idx...))[:]
-        elseif combination_type == "all"
-            for num in num_endmembers
-                combo = [c for c in combinations(1:length(library.classes), num)]
-                push!(options, combo...)
-            end
-        else
-            error("Invalid combination string")
-        end
-    else    
-        if combination_type == "class-even"
-        
+            
             all_combinations = Set()
             while length(all_combinations) < max_combinations
                 # Randomly select one index from each vector
@@ -476,6 +468,18 @@ function prepare_options(library::SpectralLibrary, combination_type::String,
             else
                 error("Invalid combination string")
             end
+    else 
+        if combination_type == "class-even"
+            options = collect(Iterators.product(class_idx...))[:]
+        elseif combination_type == "all"
+            for num in num_endmembers
+                combo = [c for c in combinations(1:length(library.classes), num)]
+                push!(options, combo...)
+            end
+        else
+            error("Invalid combination string")
+        end
+        
     end        
     
     return options
