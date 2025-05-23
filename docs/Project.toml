@@ -1,0 +1,6 @@
+[deps]
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+SpectralUnmixing = "18035c97-8b76-4bd8-9b58-2d1c7240eddc"
+
+[compat]
+Documenter = "1.9.0"
