@@ -28,4 +28,5 @@ makedocs(
 
 deploydocs(
     repo="github.com/emit-sds/SpectralUnmixing.jl.git",
+    devbranch="dev",
 )
