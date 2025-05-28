@@ -1,7 +1,7 @@
 Contributing
 ============
 
-Thank you for your interest in contributing to SpectralUnmxing. If you are just getting
+Thank you for your interest in contributing to SpectralUnmixing. If you are just getting
 started, please review the guidelines below to understand how and where you can
 best support and contribute to this project.  Typical contributions may include:
 
@@ -20,18 +20,17 @@ Getting Started
 ---------------
 
 First of all, to get a sense of the project's current status and roadmap, please
-be sure to spend some time reviewing issues in the `issue tracker <https://github.com/emit-sds/SpectralUnmixing/issues>`_.
+be sure to spend some time reviewing issues in the [issue tracker](https://github.com/emit-sds/SpectralUnmixing/issues).
 
-If you have have discovered a new issue or task, then go ahead and create a `new
-issue <https://github.com/emit-sds/SpectralUnmixing/issues/new>`_.
+If you have have discovered a new issue or task, then go ahead and create a [new issue](https://github.com/emit-sds/SpectralUnmixing/issues/new).
 
 
 Fork and Create a Branch
 ------------------------
 
-SpectralUnmixing follows the `Standard Fork and Pull Request <https://gist.github.com/Chaser324/ce0505fbed06b947d962>`_ workflow.
+SpectralUnmixing follows the [Standard Fork and Pull Request](https://gist.github.com/Chaser324/ce0505fbed06b947d962) workflow.
 
-When you have chosen an issue to work on, start by `forking <https://help.github.com/articles/fork-a-repo/>`_ the repo.
+When you have chosen an issue to work on, start by [forking](https://help.github.com/articles/fork-a-repo/) the repo.
 
 Then, create a branch with a descriptive name.  A good branch name starts with
 the issue number you are working on followed by some descriptive text.  For
@@ -45,13 +44,30 @@ example, if you are working on issue #113 you would run:
 Testing
 -------
 
-Tests live in `test/ <test/>`_, and are executed using
+Tests live in the `test/` directory and are executed using
 ```
 julia --project=@. -e 'using Pkg; Pkg.test()'
 ```
 
 Our development strategy employs continuous integration and unit testing to validate all changes.  We appreciate you writing additional tests for new modifications or features.  Depending on the significance of your changes, additional tests on real data may be requested.
 
+Documentation
+-------------
+
+Any changes, especially user-visible ones, should be accompanied by updates to docstrings so they are visible in the package's HTML documentation.
+You may also need to update the source files for the documentation in `docs/src/` if e.g. you are adding a new public function to the package.
+
+The HTML documentation is built using [Documenter.jl](https://documenter.juliadocs.org/stable/). Please do a local build of the documentation after making your changes to ensure no errors occur.
+Run the following from the `SpectralUnmixing.jl` root directory to build the documentation of your local copy of the package:
+
+```
+julia --project=docs/
+# press ] to enter Pkg
+(docs) pkg> dev .
+julia> include("docs/make.jl")
+```
+
+If no errors occur, the HTML files will be generated in `docs/build/`.
 
 Implement Your Changes and Create a Pull Request
 ------------------------------------------------
@@ -76,7 +92,7 @@ Then update your feature branch from your local copy of dev, and push it!  We re
 ```
 
 When you are ready to submit your changes back to the SpectralUnmixing repo, go to GitHub
-and make a `Pull Request <https://help.github.com/articles/creating-a-pull-request/>`_
+and make a [Pull Request](https://help.github.com/articles/creating-a-pull-request).
 
 Keeping your Pull Request Updated
 ---------------------------------
@@ -121,15 +137,26 @@ These are accepted through consensus of a quorum of maintainers.  **If you would
 Release Steps (for Maintainers)
 -------------------------------
 
-Releases should trigger a new PyPi upload, and subsequently a fresh upload to conda-forge.  Therefore,
-the revised steps for versioning are:
+New releases need to be registered with Julia's official registry prior to being tagged.
+Therefore, the revised steps for versioning are:
 
-* Submit version number change to setup.cfg in dev
-* Trigger a PR from dev to main
+* Commit a version number increment in `Project.toml` to branch `dev`
+* Trigger a PR from `dev` -> `main`
 * Accept the PR
-* Go to https://github.com/isofit/isofit/releases
+* Comment on the above merge commit with the release notes as follows:
+```
+@JuliaRegistrator register
+
+Release notes:
+
+## What's Changed
+* Github auto-generated release notes from a release draft
+
+```
+* Wait for registration of the new release to complete (can take a few days)
+* Go to https://github.com/emit-sds/SpectralUnmixing.jl/releases
 * Click "Draft a new release"
-* Enter tag version as "v3.8.0" (depending on latest version), and input release title and description
+* Enter tag version as "vX.Y.Z" (depending on latest version), use tag version as release title, and auto-generate release notes
 * Click "Publish release"
 
 Contributors
