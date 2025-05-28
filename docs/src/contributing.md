@@ -51,6 +51,23 @@ julia --project=@. -e 'using Pkg; Pkg.test()'
 
 Our development strategy employs continuous integration and unit testing to validate all changes.  We appreciate you writing additional tests for new modifications or features.  Depending on the significance of your changes, additional tests on real data may be requested.
 
+Documentation
+-------------
+
+Any changes, especially user-visible ones, should be accompanied by updates to docstrings so they are visible in the package's HTML documentation.
+You may also need to update the source files for the documentation in `docs/src/` if e.g. you are adding a new public function to the package.
+
+The HTML documentation is built using [Documenter.jl](https://documenter.juliadocs.org/stable/). Please do a local build of the documentation after making your changes to ensure no errors occur.
+Run the following from the `SpectralUnmixing.jl` root directory to build the documentation of your local copy of the package:
+
+```
+julia --project=docs/
+# press ] to enter Pkg
+(docs) pkg> dev .
+julia> include("docs/make.jl")
+```
+
+If no errors occur, the HTML files will be generated in `docs/build/`.
 
 Implement Your Changes and Create a Pull Request
 ------------------------------------------------
