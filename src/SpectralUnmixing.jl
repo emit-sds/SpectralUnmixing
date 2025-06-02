@@ -119,9 +119,8 @@ Generate a permutation of endmember indices for SMA.
 # Arguments
 - `class_idx`: A collection (such as a vector of vectors) of size n where each element
 is a set of indices corresponding to endmembers belonging to one class.
-- `num_endmembers::Vector{Int64}`: Desired number of endmembers to select. The first
-element specifies the number of endmembers to permute; if it is `-1`, all endmembers in
-library will be included.
+- `num_endmembers::Vector{Int64}`: Length 1 vector of desired number of endmembers to
+    select. If `-1`, all endmembers in library will be included.
 - `combination_type::String`: Permutation type options:
   - `"class-even"`: Randomly select one endmember from each class until the required number
   of endmembers is selected.
@@ -133,6 +132,10 @@ library will be included.
 """
 function get_sma_permutation(class_idx, num_endmembers::Vector{Int64},
     combination_type::String, library_length::Int64)
+
+    if length(num_endmembers) != 1
+        throw(ArgumentError("num_endmembers must be a single value"))
+    end
 
     if num_endmembers[1] != -1
         if combination_type == "class-even"
@@ -228,7 +231,8 @@ also [`prepare_options`](@ref).
   - `"mesma"`: Evaluate different combinations of endmembers representing each class.
   - `"mesma-best"`: MESMA and output best (lowest cost) MC fraction.
 - `n_mc::Int64`: Number of MC iterations.
-- `num_endmembers::Vector{Int64}`: The number of endmembers to consider.
+- `num_endmembers::Vector{Int64}`: The number of endmembers to consider. Must be a single
+    value for SMA.
 - `normalization::String`: The normalization method to apply to the spectral data. See
 [`scale_data`](@ref).
 - `optimization::String`: The optimization approach for unmixing: (e.g., `"bvls"`,
