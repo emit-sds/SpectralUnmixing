@@ -146,7 +146,7 @@ mutable struct SpectralLibrary
     - `class_valid_keys=nothing`: List of valid class labels.
     - `scale_factor::Float64=1.0`: Spectral scaling factor.
     - `wavelength_regions_ignore=[0,440,1310,1490,1770,2050,2440,2880]`: List of wavelength
-    regions to ignore as beginning/end pairs in list.
+        regions to ignore as beginning/end pairs in list.
     """
     SpectralLibrary(file_name::String,
         class_header_name::String,

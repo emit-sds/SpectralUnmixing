@@ -1,5 +1,5 @@
 <h1 align="center">
-SpectralUnmixing
+SpectralUnmixing.jl
 </h1>
 
 
