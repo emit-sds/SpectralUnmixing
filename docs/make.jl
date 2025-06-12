@@ -4,7 +4,7 @@ using Documenter, SpectralUnmixing
 readme_title = """
 <h1 align="center">
 <br>
-<a href="https://github.com/emit-sds/SpectralUnmixing.jl"><img src="docs/src/assets/logo.png" alt="SpectralUnmixing.jl" width="200"></a>
+<a href="https://github.com/emit-sds/SpectralUnmixing.jl"><img src="docs/src/assets/logo.svg" alt="SpectralUnmixing.jl" width="200"></a>
 <br>
 SpectralUnmixing.jl
 <br>
