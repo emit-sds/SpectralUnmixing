@@ -12,6 +12,8 @@ classname = "Class"
 @info "Basic CLI test"
 tmp_dir = mktempdir(@__DIR__) do dir
     @info "Creating temp directory: $dir"
+    CLI.install(dest_dir=dir, sym_name="unmix.jl")
+    unmix_jl_sym = joinpath(dir, "unmix.jl")
     output_file_base = joinpath(dir, "test_output")
     args = [
         refl_file,
@@ -19,7 +21,7 @@ tmp_dir = mktempdir(@__DIR__) do dir
         classname,
         output_file_base
     ]
-    cmd = `julia $unmix_jl $args`
+    cmd = `julia $unmix_jl_sym $args`
     @time proc = run(cmd)
     @test success(proc)
 end
