@@ -65,3 +65,8 @@ wl_index
 nanargmax
 nanargmin
 ```
+
+# CLI
+```@docs
+CLI.install
+```
