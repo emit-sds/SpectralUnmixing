@@ -181,14 +181,13 @@ end
     write_line_results(output_files::Vector{String}, results, n_mc::Int64,
                        write_complete_fractions::Bool)
 
-Write line-based results to specified output ENVI raster files, including primary results,
-uncertainty estimates, and complete fractions based on provided parameters.
+Write line-based [`unmix_line`](@ref) results to specified output ENVI raster files.
 
 # Arguments
 - `output_files::Vector{String}`: File paths of the output datasets to be created or
-updated. Each entry corresponds to a separate output raster.
-- `results`: A collection of results, where each entry is expected to be a tuple or
-similar structure. Specific elements contain the data to be written to the output datasets.
+updated. The first entry is for pixel mixture fractions, subsequent entries
+are for uncertainty and complete fractions, in that order, if applicable.
+- `results`: Results to be written, as produced by [`unmix_line`](@ref).
 - `n_mc::Int64`: If greater than one, uncertainty outputs will be written to the
 subsequent output file.
 - `write_complete_fractions::Bool`: Indicates whether to write complete fractions

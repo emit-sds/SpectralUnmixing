@@ -548,8 +548,9 @@ end
                           max_combinations::Int64=-1, optimization="bvls")
 
 Unmix the specified `line` of `reflectance_file` and write the results to `output_files`.
+Workhorse function for `unmix.jl`.
 
-- Calls [`unmix_line`(@ref)] and [`write_line_results`](@ref), see for arguments.
+- See [`unmix_line`(@ref)] and [`write_line_results`](@ref) for arguments.
 """
 function unmix_and_write_line(line::Int64, reflectance_file::String, mode::String,
     refl_nodata::Float64, refl_scale::Float64, normalization::String,
