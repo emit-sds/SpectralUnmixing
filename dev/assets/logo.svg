@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 145.33 129.8">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: url(#linear-gradient);
+      }
+
+      .cls-2 {
+        fill: #389826;
+      }
+
+      .cls-3 {
+        fill: #9558b2;
+      }
+
+      .cls-4 {
+        fill: none;
+        stroke-miterlimit: 10;
+        stroke-width: 6px;
+      }
+
+      .cls-4, .cls-5 {
+        stroke: #4d4d4d;
+      }
+
+      .cls-6 {
+        fill: #cb3c33;
+      }
+
+      .cls-5 {
+        fill: #4d4d4d;
+        stroke-linejoin: round;
+      }
+    </style>
+    <linearGradient id="linear-gradient" x1="47.16" y1="58.25" x2="98.21" y2="58.25" gradientTransform="translate(0 132) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#e31e36"/>
+      <stop offset=".1" stop-color="#ed1c24"/>
+      <stop offset=".22" stop-color="#f18c21"/>
+      <stop offset=".4" stop-color="#fd0"/>
+      <stop offset=".56" stop-color="#5eb546"/>
+      <stop offset=".7" stop-color="#1abcdc"/>
+      <stop offset=".8" stop-color="#084ca1"/>
+      <stop offset=".85" stop-color="#4d3e98"/>
+      <stop offset="1" stop-color="#b21e8e"/>
+    </linearGradient>
+  </defs>
+  <g>
+    <polygon class="cls-4" points="72.67 14.69 14.69 115.11 130.64 115.11 72.67 14.69"/>
+    <circle class="cls-2" cx="72.67" cy="14.69" r="14.69"/>
+    <circle class="cls-6" cx="14.69" cy="115.11" r="14.69"/>
+    <circle class="cls-3" cx="130.64" cy="115.11" r="14.69"/>
+    <polygon class="cls-5" points="51.69 96.44 41.1 102.55 42.8 105.49 31.52 105.46 37.14 95.68 38.83 98.62 49.42 92.51 51.69 96.44"/>
+    <polygon class="cls-5" points="95.93 92.51 106.51 98.62 108.21 95.68 113.82 105.46 102.55 105.49 104.24 102.55 93.66 96.44 95.93 92.51"/>
+    <polygon class="cls-5" points="70.4 56.06 70.4 43.84 67.01 43.84 72.67 34.09 78.33 43.84 74.94 43.84 74.94 56.06 70.4 56.06"/>
+  </g>
+  <path class="cls-1" d="M78.32,59.38c.63-.52,1.05-.73,1.39-.86.55-.22,1.56-.64,2.61-.35,1.08.31,1.75,1.19,2.61,2.68,1.29,2.26,1.88,3.94,2.61,5.79.78,1.98,1.41,3.35,2.61,5.95,1.11,2.42,1.17,2.38,2.61,5.44,1.37,2.92,1.51,3.38,2.61,5.7.63,1.33,1.58,3.3,2.84,5.69h-51.05c1.27-3.05,2.76-4.72,3.91-5.69.51-.43,2.27-1.82,2.61-2.09,2.12-1.68,2.2-1.7,2.61-2.1.51-.5.74-.82,2.61-3.7,1.86-2.86,2.03-3.16,2.6-3.8h0v17.38h2.6v-19.77h0c.67-.74,1.46-1.75,2.49-1.67h.07c1.43.21,1.51,3.3,2.66,3.39.49.04.86-.5,2.61-3.39,1.61-2.66,1.87-3.16,2.61-4.23,0,.06,0,25.67,0,25.67h3.77l.05-30.03"/>
+</svg>
