@@ -26,6 +26,7 @@ using LinearAlgebra
 using Combinatorics
 using Random
 
+include("CLI.jl")
 include("Datasets.jl")
 include("EndmemberLibrary.jl")
 include("Solvers.jl")
@@ -44,6 +45,9 @@ export initiate_output_datasets, set_band_names, write_results
 
 # Unmixing and simulation functions
 export unmix_line, unmix_pixel, simulate_pixel, unmix_and_write_line
+
+# CLI
+export CLI
 
 """
     wl_index(wavelengths::Vector{Float64}, target::Float64)
